@@ -126,6 +126,104 @@ class SpaceTrackQuery:
 
             return json_data
 
+        def closest_epoch(self, norad_id, epoch, mode="before"):
+            """
+            Retrieve the closest TLE for a given satellite (NORAD ID) relative to a given epoch,
+            and save the result to disk.
+
+            :param norad_id: (int or str) NORAD catalog ID of the satellite
+            :param epoch: (str) Epoch, format "YYYY-MM-DD" or "YYYY-MM-DDTHH:MM:SS"
+            :param mode: (str) "before", "after", or "nearest"
+                - "before": latest TLE before or equal to epoch
+                - "after": earliest TLE after or equal to epoch
+                - "nearest": compares both and returns whichever is closer
+            :return: dictionary corresponding to the downloaded JSON data
+            """
+            # Convert to ISO format (strip microseconds)
+            if isinstance(epoch, str):
+                try:
+                    epoch_dt = datetime.fromisoformat(epoch)
+                except ValueError:
+                    epoch_dt = datetime.strptime(epoch, "%Y-%m-%d %H:%M:%S.%f")
+                epoch = epoch_dt.replace(microsecond=0).isoformat()
+            elif isinstance(epoch, datetime):
+                epoch = epoch.replace(microsecond=0).isoformat()
+
+            with requests.Session() as s:
+                # Login
+                s.post(self.spacetrack_url + "/ajaxauth/login",
+                       json={'identity': self.username, 'password': self.password})
+
+                queried_data = None
+                json_name = f"tle_{norad_id}_{mode}_{epoch.replace(':','-')}.json"
+
+                if mode == "before":
+                    query_url = os.path.join(
+                        self.spacetrack_url,
+                        f'basicspacedata/query/class/gp_history/NORAD_CAT_ID/{norad_id}/EPOCH/<={epoch}/orderby/EPOCH desc/limit/1/format/json'
+                    )
+                    response = s.get(query_url)
+                    if response.status_code == 200:
+                        queried_data = response.json()
+
+                elif mode == "after":
+                    query_url = os.path.join(
+                        self.spacetrack_url,
+                        f'basicspacedata/query/class/gp_history/NORAD_CAT_ID/{norad_id}/EPOCH/>={epoch}/orderby/EPOCH asc/limit/1/format/json'
+                    )
+                    response = s.get(query_url)
+                    if response.status_code == 200:
+                        queried_data = response.json()
+
+                elif mode == "nearest":
+                    # Get one before and one after, then compare
+                    query_before = os.path.join(
+                        self.spacetrack_url,
+                        f'basicspacedata/query/class/gp_history/NORAD_CAT_ID/{norad_id}/EPOCH/<={epoch}/orderby/EPOCH desc/limit/1/format/json'
+                    )
+                    query_after = os.path.join(
+                        self.spacetrack_url,
+                        f'basicspacedata/query/class/gp_history/NORAD_CAT_ID/{norad_id}/EPOCH/>={epoch}/orderby/EPOCH asc/limit/1/format/json'
+                    )
+
+                    resp_before = s.get(query_before)
+                    resp_after = s.get(query_after)
+
+                    data_before = resp_before.json() if resp_before.status_code == 200 else []
+                    data_after = resp_after.json() if resp_after.status_code == 200 else []
+
+                    if not data_before and not data_after:
+                        print("No TLEs found around the given epoch.")
+                        return None
+
+                    if not data_before:
+                        queried_data = data_after
+                    elif not data_after:
+                        queried_data = data_before
+                    else:
+                        epoch_target = datetime.fromisoformat(epoch)
+                        epoch_before = datetime.fromisoformat(data_before[0]["EPOCH"])
+                        epoch_after = datetime.fromisoformat(data_after[0]["EPOCH"])
+
+                        if abs((epoch_before - epoch_target).total_seconds()) <= abs((epoch_after - epoch_target).total_seconds()):
+                            queried_data = data_before
+                        else:
+                            queried_data = data_after
+                else:
+                    raise ValueError("mode must be 'before', 'after', or 'nearest'")
+
+                # Save if something was found
+                if queried_data:
+                    if os.path.exists(json_name):
+                        os.remove(json_name)
+                    with open(json_name, "w") as json_file:
+                        json.dump(queried_data, json_file, indent=4)
+                    print(f"Closest TLE ({mode}) saved to {json_name}")
+                    return queried_data
+                else:
+                    print("Failed to retrieve data or no data available.")
+                    return None
+
         def single_norad_id(self, norad_id, N = 1):
 
             """
@@ -339,7 +437,7 @@ class SpaceTrackQuery:
 
             # Compute true anomaly from mean anomaly via Kepler's equation
             true_anomaly = self.mean_to_true_anomaly(self,mo,e)
-            
+
             return a,e,i,omega,raan,true_anomaly
 
         def tle_to_sgp4_ephemeris_object(self, tle_line_1, tle_line_2, simulation_start_epoch = None, simulation_end_epoch = None, timestep_global = 5, frame_origin = 'Earth', frame_orientation = 'J2000'):
