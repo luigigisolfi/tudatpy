@@ -407,20 +407,6 @@ void expose_data( py::module &m )
            py::arg( "body_with_ground_stations_name" ) = "Earth",
            R"doc(No documentation available.)doc" );
 
-    m.def("set_estrack_weather_data_in_ground_stations",
-           py::overload_cast< tudat::simulation_setup::SystemOfBodies &,
-                  const std::vector< std::string > &,
-                  const std::string,
-                  std::shared_ptr< tudat::interpolators::InterpolatorSettings >,
-                  const std::string & >( &tio::setEstrackWeatherDataInGroundStation ),
-
-           py::arg( "bodies" ),
-           py::arg( "weather_file_names" ),
-           py::arg( "ground_station_name" ),
-           py::arg( "interpolator_settings" ) = tudat::interpolators::cubicSplineInterpolation( ),
-           py::arg( "body_with_ground_stations_name" ) = "Earth",
-           R"doc(No documentation available.)doc" );
-
     py::class_< tudat::input_output::TrackingTxtFileContents,
                 std::shared_ptr< tudat::input_output::TrackingTxtFileContents > >(
             m, "TrackingTxtFileContents", R"doc(No documentation available.)doc" )
@@ -482,6 +468,20 @@ void expose_data( py::module &m )
            &tio::grailMassLevel1FileReader,
            py::arg( "file_name" ),
            py::arg( "data_level" ) = "1b",
+           R"doc(No documentation available.)doc" );
+
+    m.def("set_estrack_weather_data_in_ground_stations",
+           py::overload_cast< tudat::simulation_setup::SystemOfBodies &,
+                  const std::vector< std::string > &,
+                  const std::string,
+                  std::shared_ptr< tudat::interpolators::InterpolatorSettings >,
+                  const std::string & >( &tio::setEstrackWeatherDataInGroundStation ),
+
+           py::arg( "bodies" ),
+           py::arg( "weather_file_names" ),
+           py::arg( "ground_station_name" ),
+           py::arg( "interpolator_settings" ) = tudat::interpolators::cubicSplineInterpolation( ),
+           py::arg( "body_with_ground_stations_name" ) = "Earth",
            R"doc(No documentation available.)doc" );
 
 };
