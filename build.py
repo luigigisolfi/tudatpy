@@ -177,7 +177,12 @@ class StubGenerator:
     indentation: str = " " * 4
 
     # Ignored modules and methods
-    ignored_modules: list[str] = ["temp", "io", "numerical_simulation", "_deprecation.py"]
+    ignored_modules: list[str] = [
+        "temp",
+        "io",
+        "numerical_simulation",
+        "_deprecation.py",
+    ]
     ignored_methods: list[str] = ["_pybind11_conduit_v1_"]
 
     def __init__(self, build_dir: Path, mock_env: "Environment") -> None:
@@ -213,8 +218,13 @@ class StubGenerator:
         self.stubs_dir = build_dir / "tudatpy-stubs"
 
         # Function names used for deprecation assignments
-        self.deprecation_function_names = [stat.name for stat in self.__parse_script(self.python_source_dir / "_deprecation.py").body if isinstance(stat, ast.FunctionDef)]
-
+        self.deprecation_function_names = [
+            stat.name
+            for stat in self.__parse_script(
+                self.python_source_dir / "_deprecation.py"
+            ).body
+            if isinstance(stat, ast.FunctionDef)
+        ]
 
         return None
 
@@ -901,7 +911,10 @@ class StubGenerator:
                     continue
 
                 # Deprecation function assignments
-                if any(func_name in ast.unparse(statement) for func_name in self.deprecation_function_names):
+                if any(
+                    func_name in ast.unparse(statement)
+                    for func_name in self.deprecation_function_names
+                ):
                     continue
 
                 # Any other assign statement is unexpected
@@ -914,7 +927,10 @@ class StubGenerator:
             # Ignore expression statements, e.g. for deprecation warnings
             if isinstance(statement, ast.Expr):
                 # Deprecation function expressions
-                if any(func_name in ast.unparse(statement) for func_name in self.deprecation_function_names):
+                if any(
+                    func_name in ast.unparse(statement)
+                    for func_name in self.deprecation_function_names
+                ):
                     continue
 
             # Other statements (We add them without modification)

@@ -292,18 +292,14 @@ def plot_porkchop_of_single_field(
     # Axis limits
     ax.set_xlim(
         [
-            departure_epochs.min()
-            - departure_epoch_span * percent_margin / 2 / 100,
-            departure_epochs.max()
-            + departure_epoch_span * percent_margin / 2 / 100,
+            departure_epochs.min() - departure_epoch_span * percent_margin / 2 / 100,
+            departure_epochs.max() + departure_epoch_span * percent_margin / 2 / 100,
         ]
     )
     ax.set_ylim(
         [
-            arrival_epochs.min()
-            - arrival_epoch_span * percent_margin / 2 / 100,
-            arrival_epochs.max()
-            + arrival_epoch_span * percent_margin / 2 / 100,
+            arrival_epochs.min() - arrival_epoch_span * percent_margin / 2 / 100,
+            arrival_epochs.max() + arrival_epoch_span * percent_margin / 2 / 100,
         ]
     )
 
@@ -315,9 +311,7 @@ def plot_porkchop_of_single_field(
     # X axis
     nx = int(np.floor(departure_epoch_span / (dt * constants.JULIAN_DAY)))
     x_ticks = np.linspace(departure_epochs.min(), departure_epochs.max(), nx)
-    ax.xaxis.set_ticks(
-        x_ticks, [f"{tick_formatter(t)}" for t in x_ticks], rotation=90
-    )
+    ax.xaxis.set_ticks(x_ticks, [f"{tick_formatter(t)}" for t in x_ticks], rotation=90)
     # Y axis
     ny = int(np.floor(arrival_epoch_span / (dt * constants.JULIAN_DAY)))
     y_ticks = np.linspace(arrival_epochs.min(), arrival_epochs.max(), ny)
@@ -333,9 +327,7 @@ def plot_porkchop_of_single_field(
         ax.xaxis.set_minor_formatter(
             FuncFormatter(lambda value, index: tick_formatter(value))
         )
-        plt.setp(
-            ax.xaxis.get_minorticklabels(), fontsize=font_size - 1, rotation=90
-        )
+        plt.setp(ax.xaxis.get_minorticklabels(), fontsize=font_size - 1, rotation=90)
         # Y axis
         ax.yaxis.set_minor_locator(AutoMinorLocator())
         ax.yaxis.set_minor_formatter(

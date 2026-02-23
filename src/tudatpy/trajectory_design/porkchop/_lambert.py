@@ -58,12 +58,12 @@ def calculate_lambert_arc_impulsive_delta_v(
     ).gravitational_parameter
 
     # Retrieve states of departure and arrival body
-    initial_state = bodies.get_body(
-        departure_body
-    ).state_in_base_frame_from_ephemeris(departure_epoch)
-    final_state = bodies.get_body(
-        target_body
-    ).state_in_base_frame_from_ephemeris(arrival_epoch)
+    initial_state = bodies.get_body(departure_body).state_in_base_frame_from_ephemeris(
+        departure_epoch
+    )
+    final_state = bodies.get_body(target_body).state_in_base_frame_from_ephemeris(
+        arrival_epoch
+    )
 
     # Retrieve initial and final positions for Lambert targeter
     departure_position = initial_state[:3]

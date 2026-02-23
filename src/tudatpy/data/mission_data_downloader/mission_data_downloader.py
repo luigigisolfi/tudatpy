@@ -280,15 +280,9 @@ class LoadPDS:
         ]
 
         # Adding color to the header
-        colored_headers = [
-            f"{Fore.MAGENTA}{header}{Fore.RESET}" for header in headers
-        ]
+        colored_headers = [f"{Fore.MAGENTA}{header}{Fore.RESET}" for header in headers]
 
-        print(
-            tabulate(
-                data, colored_headers, tablefmt="fancy_grid", stralign="center"
-            )
-        )
+        print(tabulate(data, colored_headers, tablefmt="fancy_grid", stralign="center"))
 
     #########################################################################################################
 
@@ -325,9 +319,7 @@ class LoadPDS:
                 )
 
                 # Write the necessary inputs to the process' stdin stream
-                proc.stdin.write(
-                    "T\n"
-                )  # Command to convert transfer files to binary
+                proc.stdin.write("T\n")  # Command to convert transfer files to binary
                 proc.stdin.write(f"{input_file}\n")  # Input file
                 proc.stdin.write(f"{output_file}\n")  # Output file
 
@@ -363,9 +355,7 @@ class LoadPDS:
                 )
 
                 # Write the necessary inputs to the process' stdin stream
-                proc.stdin.write(
-                    "T\n"
-                )  # Command to convert transfer files to binary
+                proc.stdin.write("T\n")  # Command to convert transfer files to binary
                 proc.stdin.write(f"{input_file}\n")  # Input file
                 proc.stdin.write(f"{output_file}\n")  # Output file
 
@@ -640,9 +630,7 @@ class LoadPDS:
 
             for wanted_files_pattern in wanted_files_patterns:
                 # Extract all links that match the pattern
-                regex_pattern = re.escape(wanted_files_pattern).replace(
-                    r"\*", ".*"
-                )
+                regex_pattern = re.escape(wanted_files_pattern).replace(r"\*", ".*")
                 matched_files = [
                     os.path.basename(link.get("href"))
                     for link in soup.find_all("a", href=True)
@@ -651,13 +639,10 @@ class LoadPDS:
                 matched_files_list.extend(matched_files)
 
         # Combine explicitly specified files and pattern-matched files
-        all_files_to_download = set(wanted_files or []) | set(
-            matched_files_list
-        )
+        all_files_to_download = set(wanted_files or []) | set(matched_files_list)
 
         self.files_to_load = [
-            os.path.join(base_folder, data_type, file)
-            for file in all_files_to_download
+            os.path.join(base_folder, data_type, file) for file in all_files_to_download
         ]
 
         # Download each file if not already present
@@ -755,9 +740,7 @@ class LoadPDS:
 
         return self.supported_mission_kernels_url
 
-    def add_custom_mission_meta_kernel_pattern(
-        self, input_mission, custom_pattern
-    ):
+    def add_custom_mission_meta_kernel_pattern(self, input_mission, custom_pattern):
         """
         Description:
             Allows users to define and add custom regex patterns for a specific mission to the list of supported patterns. Once added, the custom pattern can be used for mission data file matching.
@@ -821,9 +804,7 @@ class LoadPDS:
         if os.path.exists(local_folder):
             for directory in os.listdir(local_folder):
                 directory_path = os.path.join(local_folder, directory)
-                if os.path.isdir(directory_path) and not os.listdir(
-                    directory_path
-                ):
+                if os.path.isdir(directory_path) and not os.listdir(directory_path):
                     os.rmdir(directory_path)
         print(f"Done.")
 
@@ -878,7 +859,12 @@ class LoadPDS:
     #########################################################################################################
 
     def dynamic_download_url_files_single_time(
-        self, input_mission, local_path, start_date, end_date, url,
+        self,
+        input_mission,
+        local_path,
+        start_date,
+        end_date,
+        url,
         verbose=True,
     ):
         """
@@ -916,9 +902,7 @@ class LoadPDS:
         except KeyError:
             raise ValueError("Pattern not found among supported patterns.")
 
-        existing_files = self.check_existing_files(
-            data_type, local_subfolder
-        )
+        existing_files = self.check_existing_files(data_type, local_subfolder)
         if not existing_files:
             existing_files = set()
 
@@ -980,9 +964,9 @@ class LoadPDS:
                                 ext = RS_dict.get("extension")
                                 # Extract the base filename without the version
                                 base_name_no_version_no_ext = (
-                                    filename_to_download.replace(
-                                        version, ""
-                                    ).replace(ext, "")
+                                    filename_to_download.replace(version, "").replace(
+                                        ext, ""
+                                    )
                                 )
                                 current_version = int(
                                     version[1:]
@@ -992,17 +976,13 @@ class LoadPDS:
                                     base_name_no_version_no_ext in value
                                     for value in files_url_dict.values()
                                 ):
-                                    files_url_dict[date_key] = (
-                                        filename_to_download
-                                    )
+                                    files_url_dict[date_key] = filename_to_download
                                 else:
                                     stored_filename = files_url_dict[date_key]
                                     stored_version_str = stored_filename.replace(
                                         base_name_no_version_no_ext, ""
                                     ).replace(ext, "")
-                                    stored_version = int(
-                                        stored_version_str[1:]
-                                    )
+                                    stored_version = int(stored_version_str[1:])
                                     if current_version >= stored_version:
                                         latest_filename_to_download = f"{base_name_no_version_no_ext}{version}{ext}"
                                         files_url_dict[date_key] = (
@@ -1014,9 +994,7 @@ class LoadPDS:
                                 input_mission != "grail-a"
                                 and input_mission != "grail-b"
                             ):
-                                print(
-                                    f"Could not parse file: {filename} - Error: {e}"
-                                )
+                                print(f"Could not parse file: {filename} - Error: {e}")
                                 continue
                     else:
                         continue
@@ -1026,21 +1004,12 @@ class LoadPDS:
         # Download missing files and collect existing ones that match the date range
         for date in all_dates:
             if input_mission in ("mex", "ro"):
-                date_string = (
-                    f"{date.year % 100:02d}{date.timetuple().tm_yday:03d}"
-                )
+                date_string = f"{date.year % 100:02d}{date.timetuple().tm_yday:03d}"
 
             else:
-                if (
-                    input_mission
-                    in self.supported_mission_odf_time_formats.keys()
-                ):
-                    format_key = self.supported_mission_odf_time_formats[
-                        input_mission
-                    ]
-                    date_string = self.format_datetime_to_string(
-                        date, format_key
-                    )
+                if input_mission in self.supported_mission_odf_time_formats.keys():
+                    format_key = self.supported_mission_odf_time_formats[input_mission]
+                    date_string = self.format_datetime_to_string(date, format_key)
                 else:
                     print(
                         f"No ODF time format associated to input mission: {input_mission}. Please provide it in self.supported_mission_odf_time_formats."
@@ -1074,9 +1043,7 @@ class LoadPDS:
                         self.relevant_files.append(full_local_path)
                         self._last_downloaded_files.append(full_local_path)
                     except Exception as e:
-                        print(
-                            f"!! Failed to download {full_download_url}: {e} !!"
-                        )
+                        print(f"!! Failed to download {full_download_url}: {e} !!")
 
         if len(self.relevant_files) == 0:
             if verbose:
@@ -1163,15 +1130,11 @@ class LoadPDS:
         ]
 
         try:
-            supported_pattern = self.supported_patterns[input_mission][
-                data_type
-            ]
+            supported_pattern = self.supported_patterns[input_mission][data_type]
         except KeyError:
             raise ValueError(f"Pattern not found among supported patterns.")
 
-        existing_files = self.check_existing_files(
-            data_type, local_subfolder
-        )
+        existing_files = self.check_existing_files(data_type, local_subfolder)
         if not existing_files:
             existing_files = set()
 
@@ -1236,11 +1199,9 @@ class LoadPDS:
                                 continue
 
                             # Extract the base filename without the version
-                            base_name_no_version_no_ext = (
-                                filename_to_download.replace(
-                                    version, ""
-                                ).replace(ext, "")
-                            )
+                            base_name_no_version_no_ext = filename_to_download.replace(
+                                version, ""
+                            ).replace(ext, "")
                             current_version = int(
                                 version[1:]
                             )  # Extract numeric version (e.g., v02 -> 2)
@@ -1253,17 +1214,15 @@ class LoadPDS:
                                     filename_to_download
                                 )
                             else:
-                                stored_filename = files_url_dict[
-                                    (start_time, end_time)
-                                ]
+                                stored_filename = files_url_dict[(start_time, end_time)]
                                 stored_version_str = stored_filename.replace(
                                     base_name_no_version_no_ext, ""
                                 ).replace(ext, "")
-                                stored_version = int(
-                                    stored_version_str[1:]
-                                )
+                                stored_version = int(stored_version_str[1:])
                                 if current_version >= stored_version:
-                                    latest_filename_to_download = f"{base_name_no_version_no_ext}{version}{ext}"
+                                    latest_filename_to_download = (
+                                        f"{base_name_no_version_no_ext}{version}{ext}"
+                                    )
                                     files_url_dict[(start_time, end_time)] = (
                                         latest_filename_to_download
                                     )
@@ -1277,12 +1236,13 @@ class LoadPDS:
         for new_interval, filename_to_download in files_url_dict.items():
             new_start, new_end = new_interval
             # Check if the file's interval overlaps with the requested date range
-            if not (new_start.date() <= end_date.date() and new_end.date() >= start_date.date()):
+            if not (
+                new_start.date() <= end_date.date()
+                and new_end.date() >= start_date.date()
+            ):
                 continue
 
-            full_local_path = os.path.join(
-                local_subfolder, filename_to_download
-            )
+            full_local_path = os.path.join(local_subfolder, filename_to_download)
 
             if full_local_path in existing_files:
                 # File already exists locally and overlaps date range — include it
@@ -1438,9 +1398,7 @@ class LoadPDS:
             # Check whether a matching file was found at the targeted url for this specific date, and split the filename at "/"
             # to account for the possibility that the targeted file is stored in a nested folder
             file_to_download = [
-                x
-                for x in files_url
-                if re.match(current_filename.split("/")[0], x)
+                x for x in files_url if re.match(current_filename.split("/")[0], x)
             ]
 
             # If the file is directly stored at the specified url (no nested folder), then the filename can be stored directly
@@ -1452,26 +1410,22 @@ class LoadPDS:
                 reqs2 = requests.get(url + file_to_download[0])
 
                 # Parse all files within the current folder
-                for nested_link in BeautifulSoup(
-                    reqs2.text, "html.parser"
-                ).find_all("a"):
+                for nested_link in BeautifulSoup(reqs2.text, "html.parser").find_all(
+                    "a"
+                ):
                     nested_file = nested_link.get("href")
 
                     # Retrieve all matching file names within the current folder
                     relevant_link = [
                         x
                         for x in [nested_file]
-                        if re.match(
-                            current_filename.split("/")[-1], x.split("/")[-1]
-                        )
+                        if re.match(current_filename.split("/")[-1], x.split("/")[-1])
                     ]
 
                     # If a match is found, store the filename that should be downloaded (now including the extra folder layer)
                     if len(relevant_link) == 1:
                         files_to_download.append(
-                            file_to_download[0]
-                            + "/"
-                            + relevant_link[0].split("/")[-1]
+                            file_to_download[0] + "/" + relevant_link[0].split("/")[-1]
                         )
 
             # Download all relevant files from the targeted url
@@ -1512,9 +1466,7 @@ class LoadPDS:
         if input_mission in self.supported_patterns:
             level_one_object = self.supported_patterns[input_mission]
         else:
-            raise ValueError(
-                "Selected Mission Not Supported (yet!) Aborting ..."
-            )
+            raise ValueError("Selected Mission Not Supported (yet!) Aborting ...")
 
         if data_type_lower == "all":
             data_type_types = all_supported_types
@@ -1548,8 +1500,7 @@ class LoadPDS:
                                 )  # Get the start position of the matched group
                                 if dictionary[key] is not None:
                                     if (
-                                        last_pos != current_pos
-                                        and last_pos != 0
+                                        last_pos != current_pos and last_pos != 0
                                     ):  # Check if there's a gap since last valid group
                                         underscore_indices.append(
                                             group_index
@@ -1573,9 +1524,7 @@ class LoadPDS:
                                         self.start_date_utc = (
                                             LoadPDS.format_string_to_datetime(
                                                 LoadPDS,
-                                                dictionary["start_date_file"][
-                                                    1:7
-                                                ],
+                                                dictionary["start_date_file"][1:7],
                                             )
                                         )
                                         self.end_date_utc = (
@@ -1585,17 +1534,14 @@ class LoadPDS:
                                         dictionary["start_date_utc"] = (
                                             self.start_date_utc
                                         )
-                                        dictionary["end_date_utc"] = (
-                                            self.end_date_utc
-                                        )
+                                        dictionary["end_date_utc"] = self.end_date_utc
 
                                     elif (
                                         len(dictionary["start_date_file"]) == 4
                                         and dictionary["purpose"] == "SA"
                                     ):
                                         mex_sa_date_trick = (
-                                            dictionary["start_date_file"]
-                                            + "0101_"
+                                            dictionary["start_date_file"] + "0101_"
                                         )
                                         self.start_date_utc = (
                                             LoadPDS.format_string_to_datetime(
@@ -1603,15 +1549,12 @@ class LoadPDS:
                                             )
                                         )
                                         self.end_date_utc = (
-                                            self.start_date_utc
-                                            + relativedelta(years=1)
+                                            self.start_date_utc + relativedelta(years=1)
                                         )
                                         dictionary["start_date_utc"] = (
                                             self.start_date_utc
                                         )
-                                        dictionary["end_date_utc"] = (
-                                            self.end_date_utc
-                                        )
+                                        dictionary["end_date_utc"] = self.end_date_utc
 
                                     else:
                                         self.start_date_utc = (
@@ -1625,24 +1568,19 @@ class LoadPDS:
                                                 LoadPDS,
                                                 dictionary["end_date_file"],
                                             )
-                                            if dictionary["end_date_file"]
-                                            != "000000"
+                                            if dictionary["end_date_file"] != "000000"
                                             else self.start_date_utc
                                             + relativedelta(months=1)
                                         )  # this deals with MEX ORMM files
                                         dictionary["start_date_utc"] = (
                                             self.start_date_utc
                                         )
-                                        dictionary["end_date_utc"] = (
-                                            self.end_date_utc
-                                        )
+                                        dictionary["end_date_utc"] = self.end_date_utc
 
                             # If present, convert date_file in utc (only one date is present in the Radio Science file names)
                             elif "date_file" in dictionary:
-                                self.date_utc = (
-                                    LoadPDS.format_string_to_datetime(
-                                        LoadPDS, dictionary["date_file"]
-                                    )
+                                self.date_utc = LoadPDS.format_string_to_datetime(
+                                    LoadPDS, dictionary["date_file"]
                                 )
                                 dictionary["date_utc"] = self.date_utc
 
@@ -1762,8 +1700,7 @@ class LoadPDS:
                 (
                     key
                     for key, exts in self.type_to_extension.items()
-                    if file_extension
-                    in (exts if isinstance(exts, list) else [exts])
+                    if file_extension in (exts if isinstance(exts, list) else [exts])
                 ),
                 None,  # No fallback, unmatched extensions will be ignored
             )
@@ -1785,9 +1722,7 @@ class LoadPDS:
     def download_kernels_from_meta_kernel(self, input_mission, local_folder):
 
         input_mission = input_mission.lower()
-        self.kernel_files_to_load = self.extract_kernels_from_meta_kernel(
-            input_mission
-        )
+        self.kernel_files_to_load = self.extract_kernels_from_meta_kernel(input_mission)
 
         skipped_files = []
         for kernel_type, kernel_urls in self.kernel_files_to_load.items():
@@ -1798,39 +1733,29 @@ class LoadPDS:
                     url_kernel_path = kernel_url[
                         len(self.supported_mission_kernels_url[input_mission]) :
                     ]
-                    local_file_path = os.path.join(
-                        local_folder, url_kernel_path
-                    )
+                    local_file_path = os.path.join(local_folder, url_kernel_path)
                 else:
                     url_kernel_path = os.path.join(
                         kernel_type,
                         kernel_url[
-                            len(
-                                self.supported_mission_meta_kernel_url[
-                                    input_mission
-                                ]
-                            ) :
+                            len(self.supported_mission_meta_kernel_url[input_mission]) :
                         ],
                     )
-                    local_file_path = os.path.join(
-                        local_folder, url_kernel_path
-                    )
+                    local_file_path = os.path.join(local_folder, url_kernel_path)
 
                 local_kernel_folder = os.path.dirname(local_file_path)
                 os.makedirs(local_kernel_folder, exist_ok=True)
 
                 # Meta-kernels should always be re-downloaded to assure the latest version
                 if kernel_type == "mk" or not os.path.exists(local_file_path):
-                    action = (
-                        "Re-downloading"
-                        if kernel_type == "mk"
-                        else "Downloading"
-                    )
+                    action = "Re-downloading" if kernel_type == "mk" else "Downloading"
                     print(f"{action}: '{kernel_url}' to: {local_file_path}")
                     urlretrieve(kernel_url, local_file_path)
                     # Patch PATH_VALUES in meta-kernel files so they point to the local directory
                     if kernel_type == "mk":
-                        self._patch_meta_kernel_path_values(local_file_path, local_folder)
+                        self._patch_meta_kernel_path_values(
+                            local_file_path, local_folder
+                        )
                 else:
                     skipped_files.append(url_kernel_path)
 
@@ -1921,12 +1846,8 @@ class LoadPDS:
                         return self.latest_kernel
 
             if meta_kernels:
-                self.latest_kernel = max(
-                    meta_kernels, key=lambda x: (x[0], x[1])
-                )
-                return self.latest_kernel[
-                    2
-                ]  # Return the URL of the most recent file
+                self.latest_kernel = max(meta_kernels, key=lambda x: (x[0], x[1]))
+                return self.latest_kernel[2]  # Return the URL of the most recent file
             else:
                 print("No meta-kernels found matching the pattern.")
                 return None
@@ -1943,18 +1864,14 @@ class LoadPDS:
     def get_latest_clock_kernel_name(self, input_mission):
 
         input_mission = input_mission.lower()
-        kernels_from_meta_kernel = self.extract_kernels_from_meta_kernel(
-            input_mission
-        )
+        kernels_from_meta_kernel = self.extract_kernels_from_meta_kernel(input_mission)
 
         clock_files_list = []
         for kernel_type, kernel_files in kernels_from_meta_kernel.items():
             for kernel_file in kernel_files:
                 if kernel_type == "sclk":
                     if len(kernel_files) > 1:
-                        print(
-                            f"Warning: Clock Kernel Ambiguity Found: {kernel_files}."
-                        )
+                        print(f"Warning: Clock Kernel Ambiguity Found: {kernel_files}.")
                         for clock_file in kernel_files:
                             clock_files_list.append(clock_file.split("/")[-1])
 
@@ -2063,8 +1980,8 @@ class LoadPDS:
                 if "ALL_TITAN" in flyby_IDs:
                     print("removing")
                     flyby_IDs.remove("ALL_TITAN")  # Remove 'ALL_TITAN'
-                    full_moon_flybys_list = (
-                        self.get_cassini_full_moon_flybys_list("TITAN")
+                    full_moon_flybys_list = self.get_cassini_full_moon_flybys_list(
+                        "TITAN"
                     )
                     flyby_IDs.extend(full_moon_flybys_list)
                     # Remove duplicates
@@ -2075,8 +1992,8 @@ class LoadPDS:
                 # Process Enceladus flybys if 'ALL_ENCELADUS' is in the list
                 if "ALL_ENCELADUS" in flyby_IDs:
                     flyby_IDs.remove("ALL_ENCELADUS")  # Remove 'ALL_ENCELADUS'
-                    full_moon_flybys_list = (
-                        self.get_cassini_full_moon_flybys_list("ENCELADUS")
+                    full_moon_flybys_list = self.get_cassini_full_moon_flybys_list(
+                        "ENCELADUS"
                     )
                     flyby_IDs.extend(full_moon_flybys_list)
                     # Remove duplicates
@@ -2090,9 +2007,7 @@ class LoadPDS:
                 if len(processed_moons) != 0:
                     for moon in processed_moons:
                         for flyby_ID in flyby_IDs:
-                            local_folder = os.path.join(
-                                base_folder, moon, flyby_ID
-                            )
+                            local_folder = os.path.join(base_folder, moon, flyby_ID)
                             local_folder_list.append(
                                 local_folder
                             )  # Append to local_folder_list
@@ -2111,18 +2026,14 @@ class LoadPDS:
                 for moon in ["TITAN", "ENCELADUS"]:
                     if f"ALL_{moon}" == flyby_IDs:
                         flyby_IDs.remove(f"ALL_{moon}")
-                        full_moon_flybys_list = (
-                            self.get_cassini_full_moon_flybys_list(moon)
+                        full_moon_flybys_list = self.get_cassini_full_moon_flybys_list(
+                            moon
                         )
                         flyby_IDs.extend(full_moon_flybys_list)
-                        flyby_IDs = list(
-                            set(flyby_IDs)
-                        )  # This removes duplicates
+                        flyby_IDs = list(set(flyby_IDs))  # This removes duplicates
 
                         for flyby_ID in flyby_IDs:
-                            local_folder = os.path.join(
-                                base_folder, moon, flyby_ID
-                            )
+                            local_folder = os.path.join(base_folder, moon, flyby_ID)
                             local_folder_list.append(
                                 local_folder
                             )  # append to local_folder_list
@@ -2158,9 +2069,7 @@ class LoadPDS:
                         f"Folder: {local_folder} already exists and will not be overwritten."
                     )
         else:
-            print(
-                f"Folder: {base_folder} already exists and will not be overwritten."
-            )
+            print(f"Folder: {base_folder} already exists and will not be overwritten.")
 
         print(
             f"===========================================================================================\n"
@@ -2275,9 +2184,7 @@ class LoadPDS:
             elif input_mission == "grail-a":
                 if kernel_files_to_load:
                     _, radio_science_files_to_load, ancillary_files_to_load = (
-                        self.get_grail_a_files(
-                            local_folder, start_date, end_date
-                        )
+                        self.get_grail_a_files(local_folder, start_date, end_date)
                     )
 
                 else:
@@ -2285,15 +2192,11 @@ class LoadPDS:
                         kernel_files_to_load,
                         radio_science_files_to_load,
                         ancillary_files_to_load,
-                    ) = self.get_grail_a_files(
-                        local_folder, start_date, end_date
-                    )
+                    ) = self.get_grail_a_files(local_folder, start_date, end_date)
             elif input_mission == "grail-b":
                 if kernel_files_to_load:
                     _, radio_science_files_to_load, ancillary_files_to_load = (
-                        self.get_grail_b_files(
-                            local_folder, start_date, end_date
-                        )
+                        self.get_grail_b_files(local_folder, start_date, end_date)
                     )
 
                 else:
@@ -2301,9 +2204,7 @@ class LoadPDS:
                         kernel_files_to_load,
                         radio_science_files_to_load,
                         ancillary_files_to_load,
-                    ) = self.get_grail_b_files(
-                        local_folder, start_date, end_date
-                    )
+                    ) = self.get_grail_b_files(local_folder, start_date, end_date)
 
         if kernel_files_to_load:
             meta_kernel_present = "mk" in kernel_files_to_load
@@ -2312,12 +2213,8 @@ class LoadPDS:
             for kernel_type, kernel_files in kernel_files_to_load.items():
                 self.all_kernel_files[kernel_type] = []
                 for kernel_file in kernel_files:
-                    converted_kernel_file = self.spice_transfer2binary(
-                        kernel_file
-                    )
-                    self.all_kernel_files[kernel_type].append(
-                        converted_kernel_file
-                    )
+                    converted_kernel_file = self.spice_transfer2binary(kernel_file)
+                    self.all_kernel_files[kernel_type].append(converted_kernel_file)
 
             # If meta-kernel is present and load_kernels is True: load only meta-kernel
             if meta_kernel_present and load_kernels:
@@ -2352,13 +2249,8 @@ class LoadPDS:
                     ancillary_file
                 ) in ancillary_files:  # Iterate over each file in the list
                     try:
-                        if (
-                            ancillary_type
-                            not in self.all_ancillary_files.keys()
-                        ):
-                            self.all_ancillary_files[ancillary_type] = [
-                                ancillary_file
-                            ]
+                        if ancillary_type not in self.all_ancillary_files.keys():
+                            self.all_ancillary_files[ancillary_type] = [ancillary_file]
                             if load_kernels:
                                 spice.load_kernel(ancillary_file)
                         else:
@@ -2383,10 +2275,7 @@ class LoadPDS:
                 for (
                     radio_science_file
                 ) in radio_science_files:  # Iterate over each file in the list
-                    if (
-                        radio_science_type
-                        not in self.all_radio_science_files.keys()
-                    ):
+                    if radio_science_type not in self.all_radio_science_files.keys():
                         self.all_radio_science_files[radio_science_type] = [
                             radio_science_file
                         ]
@@ -2403,17 +2292,13 @@ class LoadPDS:
                 print(
                     "================================================================"
                 )
-                print(
-                    f"Number of Loaded Existing + Downloaded Kernels: {n_kernels}"
-                )
+                print(f"Number of Loaded Existing + Downloaded Kernels: {n_kernels}")
                 std_kernels = spice.load_standard_kernels()
                 self.flag_load_standard_kernels = True
                 n_standard_kernels = (
                     spice.get_total_count_of_kernels_loaded() - n_kernels
                 )
-                print(
-                    f"Number of Loaded Standard Kernels: {n_standard_kernels}"
-                )
+                print(f"Number of Loaded Standard Kernels: {n_standard_kernels}")
                 print(
                     "================================================================"
                 )
@@ -2421,9 +2306,7 @@ class LoadPDS:
             print(
                 f"Number of Loaded Existing + Downloaded + Standard Kernels: {n_kernels}"
             )
-            print(
-                "================================================================"
-            )
+            print("================================================================")
 
         self.clean_mission_archive(local_folder)
 
@@ -2471,9 +2354,7 @@ class LoadPDS:
 
         input_mission = "mex"
         # Tropospheric corrections
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(
             f"Download {input_mission.upper()} Tropospheric and Ionospheric Corrections Files"
         )
@@ -2514,13 +2395,9 @@ class LoadPDS:
                     self.ancillary_files_to_load[key] = tropo_files_to_load
 
                 else:
-                    print(
-                        "No tropospheric or ionospheric files to download this time."
-                    )
+                    print("No tropospheric or ionospheric files to download this time.")
 
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Radio Science Kernels:")
         url_radio_science_files = self.get_url_mex_radio_science_files(
             start_date, end_date, radio_observation_type
@@ -2546,9 +2423,7 @@ class LoadPDS:
                     continue
 
         # Clock files
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Clock Kernels:")
         url_clock_files = (
             "https://spiftp.esac.esa.int/data/SPICE/MARS-EXPRESS/kernels/sclk/"
@@ -2566,9 +2441,7 @@ class LoadPDS:
         else:
             print("No sclk files to download this time.")
 
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Frame Kernels:")
         url_frame_files = (
             "https://spiftp.esac.esa.int/data/SPICE/MARS-EXPRESS/kernels/fk/"
@@ -2593,9 +2466,7 @@ class LoadPDS:
             print("No fk files to download this time.")
 
             # Spk files
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} SPK Kernels:")
         url_spk_files = [
             "https://spiftp.esac.esa.int/data/SPICE/MARS-EXPRESS/kernels/spk/"
@@ -2614,14 +2485,12 @@ class LoadPDS:
 
         else:
             for url_spk_file in url_spk_files:
-                spk_files_to_load = (
-                    self.dynamic_download_url_files_time_interval(
-                        input_mission,
-                        local_path=local_folder,
-                        start_date=start_date,
-                        end_date=end_date,
-                        url=url_spk_file,
-                    )
+                spk_files_to_load = self.dynamic_download_url_files_time_interval(
+                    input_mission,
+                    local_path=local_folder,
+                    start_date=start_date,
+                    end_date=end_date,
+                    url=url_spk_file,
                 )
 
         if spk_files_to_load:
@@ -2630,9 +2499,7 @@ class LoadPDS:
             print("No spk files to download this time.")
 
             # Orientation files
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} CK Kernels:")
         url_ck_files = [
             "https://spiftp.esac.esa.int/data/SPICE/MARS-EXPRESS/kernels/ck/"
@@ -2650,14 +2517,12 @@ class LoadPDS:
 
         else:
             for url_ck_file in url_ck_files:
-                ck_files_to_load = (
-                    self.dynamic_download_url_files_time_interval(
-                        input_mission,
-                        local_path=local_folder,
-                        start_date=start_date,
-                        end_date=end_date,
-                        url=url_ck_file,
-                    )
+                ck_files_to_load = self.dynamic_download_url_files_time_interval(
+                    input_mission,
+                    local_path=local_folder,
+                    start_date=start_date,
+                    end_date=end_date,
+                    url=url_ck_file,
                 )
 
         if ck_files_to_load:
@@ -2665,9 +2530,7 @@ class LoadPDS:
         else:
             print("No spk files to download this time.")
 
-        print(
-            "----------------------------------------------------------------"
-        )
+        print("----------------------------------------------------------------")
         print(
             "All requested, relevant and previously non-existing MEX files have been now downloaded. Enjoy!"
         )
@@ -2845,9 +2708,7 @@ class LoadPDS:
             start_date_file = (
                 match.group(2) if len(match.group(2)) == 10 else match.group(3)
             )
-            end_date_file = (
-                match.group(3) if len(match.group(2)) == 10 else None
-            )
+            end_date_file = match.group(3) if len(match.group(2)) == 10 else None
             start_date_utc = self.format_string_to_datetime(start_date_file)
             end_date_utc = (
                 self.format_string_to_datetime(end_date_file)
@@ -2904,21 +2765,15 @@ class LoadPDS:
             - `ancillary_files_to_load` (`dict`): An empty dictionary for now, intended for ancillary files.
         """
 
-        self.radio_science_files_to_load = (
-            {}
-        )  # empty for now, since we need fdets
+        self.radio_science_files_to_load = {}  # empty for now, since we need fdets
         self.kernel_files_to_load = {}
         self.ancillary_files_to_load = {}  # empty for now
 
         input_mission = "juice"
         # Clock files
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Clock Files:")
-        url_clock_files = (
-            "https://spiftp.esac.esa.int/data/SPICE/JUICE/kernels/sclk/"
-        )
+        url_clock_files = "https://spiftp.esac.esa.int/data/SPICE/JUICE/kernels/sclk/"
         wanted_clock_files = self.get_latest_clock_kernel_name(input_mission)
         clock_files_to_load = self.get_kernels(
             input_mission=input_mission,
@@ -2933,13 +2788,9 @@ class LoadPDS:
             print("No sclk files to download this time.")
 
         # Frame Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Frame Files:")
-        url_frame_files = (
-            "https://spiftp.esac.esa.int/data/SPICE/JUICE/kernels/fk/"
-        )
+        url_frame_files = "https://spiftp.esac.esa.int/data/SPICE/JUICE/kernels/fk/"
         wanted_frame_files = [
             "juice_v41.tf",
             "juice_events_crema_5_1_150lb_23_1_v02.tf",
@@ -2962,9 +2813,7 @@ class LoadPDS:
         else:
             print("No fk files to download this time.")
 
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Orientation Kernels:")
         ck_files_to_load = []
         wanted_ck_files = [
@@ -2993,14 +2842,12 @@ class LoadPDS:
             "https://spiftp.esac.esa.int/data/SPICE/JUICE/kernels/ck/"
         ]
         if len(measured_url_ck_files) == 1:
-            measured_ck_files_to_load = (
-                self.dynamic_download_url_files_time_interval(
-                    input_mission,
-                    local_path=local_folder,
-                    start_date=start_date,
-                    end_date=end_date,
-                    url=measured_url_ck_files[0],
-                )
+            measured_ck_files_to_load = self.dynamic_download_url_files_time_interval(
+                input_mission,
+                local_path=local_folder,
+                start_date=start_date,
+                end_date=end_date,
+                url=measured_url_ck_files[0],
             )
         else:
             for measured_url_ck_file in measured_url_ck_files:
@@ -3027,23 +2874,19 @@ class LoadPDS:
 
             # SPK files
         spk_files_to_load = []
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} SPK Kernels:")
         measured_url_spk_files = [
             "https://spiftp.esac.esa.int/data/SPICE/JUICE/kernels/spk/"
         ]
 
         if len(measured_url_spk_files) == 1:
-            measured_spk_files_to_load = (
-                self.dynamic_download_url_files_time_interval(
-                    input_mission,
-                    local_path=local_folder,
-                    start_date=start_date,
-                    end_date=end_date,
-                    url=measured_url_spk_files[0],
-                )
+            measured_spk_files_to_load = self.dynamic_download_url_files_time_interval(
+                input_mission,
+                local_path=local_folder,
+                start_date=start_date,
+                end_date=end_date,
+                url=measured_url_spk_files[0],
             )
         else:
             for measured_url_spk_file in measured_url_spk_files:
@@ -3138,9 +2981,7 @@ class LoadPDS:
 
         input_mission = "mro"
         # ODF files
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(
             f"Download {input_mission.upper()} {radio_science_file_type.upper()} files:"
         )
@@ -3166,9 +3007,7 @@ class LoadPDS:
         if not self.radio_science_files_to_load:
             print("No Radio Science files to download this time.")
         # Clock Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Clock Kernels:")
         url_clock_files = "https://naif.jpl.nasa.gov/pub/naif/pds/data/mro-m-spice-6-v1.0/mrosp_1000/data/sclk/"
         wanted_clock_files = self.get_latest_clock_kernel_name(input_mission)
@@ -3190,9 +3029,7 @@ class LoadPDS:
             raise
 
         # Frame Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Frame Kernels:")
         url_frame_files = "https://naif.jpl.nasa.gov/pub/naif/pds/data/mro-m-spice-6-v1.0/mrosp_1000/data/fk/"
         wanted_frame_files = ["mro_v16.tf"]
@@ -3209,9 +3046,7 @@ class LoadPDS:
             print("No fk files to download this time.")
 
             # Planetary and Ephemeris Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} SPK Kernels:")
         url_spk_files = "https://naif.jpl.nasa.gov/pub/naif/pds/data/mro-m-spice-6-v1.0/mrosp_1000/data/spk/"
         wanted_spk_files = self.get_url_mro_spk_files(start_date, end_date)
@@ -3237,23 +3072,19 @@ class LoadPDS:
             print("No spk files to download this time.")
 
             # Orientation Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Orientation Kernels:")
         measured_url_ck_files = [
             "https://naif.jpl.nasa.gov/pub/naif/pds/data/mro-m-spice-6-v1.0/mrosp_1000/data/ck/"
         ]
 
         if len(measured_url_ck_files) == 1:
-            measured_ck_files_to_load = (
-                self.dynamic_download_url_files_time_interval(
-                    input_mission,
-                    local_path=local_folder,
-                    start_date=start_date,
-                    end_date=end_date,
-                    url=measured_url_ck_files[0],
-                )
+            measured_ck_files_to_load = self.dynamic_download_url_files_time_interval(
+                input_mission,
+                local_path=local_folder,
+                start_date=start_date,
+                end_date=end_date,
+                url=measured_url_ck_files[0],
             )
         else:
             for measured_url_ck_file in measured_url_ck_files:
@@ -3273,12 +3104,8 @@ class LoadPDS:
             print("No ck files to download this time.")
 
             # Tropospheric corrections
-        print(
-            "================================================================"
-        )
-        print(
-            f"Download {input_mission.upper()} Tropospheric Corrections Files"
-        )
+        print("================================================================")
+        print(f"Download {input_mission.upper()} Tropospheric Corrections Files")
         url_tropo_files = "https://pds-geosciences.wustl.edu/mro/mro-m-rss-1-magr-v1/mrors_0xxx/ancillary/tro/"
         tropo_files_to_load = self.dynamic_download_url_files_time_interval(
             input_mission,
@@ -3294,9 +3121,7 @@ class LoadPDS:
             print("No tropospheric files to download this time.")
 
             # Ionospheric corrections
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Ionospheric Corrections Files")
         url_ion_files = "https://pds-geosciences.wustl.edu/mro/mro-m-rss-1-magr-v1/mrors_0xxx/ancillary/ion/"
         ion_files_to_load = self.dynamic_download_url_files_time_interval(
@@ -3494,8 +3319,7 @@ class LoadPDS:
 
         # Create dictionary of filenames by pds_repo
         filenames_dict = {
-            pds_repo: data["file_name"]
-            for pds_repo, data in cumindex_dict.items()
+            pds_repo: data["file_name"] for pds_repo, data in cumindex_dict.items()
         }
 
         for pds_repo, filenames_list in filenames_dict.items():
@@ -3505,9 +3329,7 @@ class LoadPDS:
             ]
             filenames_to_download.extend(wanted_filenames)
 
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(
             f"Download {input_mission.upper()} Kernels (ck, spk) Ancillary Files (eop, ion, tro) and Radio Science (odf) files from PDS Atmosphere Node:"
         )
@@ -3538,14 +3360,14 @@ class LoadPDS:
                 # Add file paths for 'ck' type files
 
                 if file_ext.lower() in ["ion", "tro"]:
-                    self.ancillary_files_to_load.setdefault(
-                        file_ext, []
-                    ).append(local_file_path)
+                    self.ancillary_files_to_load.setdefault(file_ext, []).append(
+                        local_file_path
+                    )
 
                 elif file_ext.lower() in ["odf"]:
-                    self.radio_science_files_to_load.setdefault(
-                        file_ext, []
-                    ).append(local_file_path)
+                    self.radio_science_files_to_load.setdefault(file_ext, []).append(
+                        local_file_path
+                    )
                 else:
                     self.kernel_files_to_load.setdefault(file_ext, []).append(
                         local_file_path
@@ -3559,23 +3381,25 @@ class LoadPDS:
                     print(f"Downloading: '{filename}' to: {local_file_path}")
 
                     if file_ext.lower() in ["ion", "tro", "eop"]:
-                        self.ancillary_files_to_load.setdefault(
-                            file_ext, []
-                        ).append(local_file_path)
+                        self.ancillary_files_to_load.setdefault(file_ext, []).append(
+                            local_file_path
+                        )
 
                     elif file_ext.lower() in ["odf"]:
                         self.radio_science_files_to_load.setdefault(
                             file_ext, []
                         ).append(local_file_path)
                     else:
-                        self.kernel_files_to_load.setdefault(
-                            file_ext, []
-                        ).append(local_file_path)
+                        self.kernel_files_to_load.setdefault(file_ext, []).append(
+                            local_file_path
+                        )
 
                 except Exception as e:
                     try:
                         urlretrieve(filename.lower(), local_file_path)
-                        print(f"Downloading: '{filename.lower()}' to: {local_file_path}")
+                        print(
+                            f"Downloading: '{filename.lower()}' to: {local_file_path}"
+                        )
 
                         if file_ext.lower() in ["ion", "tro", "eop"]:
                             self.ancillary_files_to_load.setdefault(
@@ -3587,21 +3411,17 @@ class LoadPDS:
                                 file_ext, []
                             ).append(local_file_path)
                         else:
-                            self.kernel_files_to_load.setdefault(
-                                file_ext, []
-                            ).append(local_file_path)
+                            self.kernel_files_to_load.setdefault(file_ext, []).append(
+                                local_file_path
+                            )
 
                     except:
                         print(f"Error downloading {filename.lower()}: {e}")
 
         # Frame Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Frame Kernels from NAIF:")
-        url_frame_files = (
-            "https://naif.jpl.nasa.gov/pub/naif/CASSINI/kernels/fk/"
-        )
+        url_frame_files = "https://naif.jpl.nasa.gov/pub/naif/CASSINI/kernels/fk/"
         wanted_frame_files = ["cas_v43.tf"]
         frame_files_to_load = self.get_kernels(
             input_mission=input_mission,
@@ -3699,7 +3519,9 @@ class LoadPDS:
         experiment = flyby_dict["experiment"]
 
         # Define the URL template
-        pds_repo_url = f"https://atmos.nmsu.edu/pdsd/archive/data/co-ssa-rss-1-{experiment}-v10/"
+        pds_repo_url = (
+            f"https://atmos.nmsu.edu/pdsd/archive/data/co-ssa-rss-1-{experiment}-v10/"
+        )
 
         # Check if the URL exists by sending a HEAD request
         try:
@@ -3825,27 +3647,17 @@ class LoadPDS:
             # Extract the columns
             pds_repo = cols[0].replace('"', "").replace("'", "").strip()
             file_label = cols[1].replace('"', "").replace("'", "").strip()
-            file_label_path = (
-                file_label.split("/")[0] + "/" + file_label.split("/")[1]
-            )
+            file_label_path = file_label.split("/")[0] + "/" + file_label.split("/")[1]
 
             file_name = (
                 file_label_path
                 + "/"
                 + cols[2].replace('"', "").replace("'", "").strip()
             )
-            external_file_name = (
-                cols[3].replace('"', "").replace("'", "").strip()
-            )
-            start_date_utc = (
-                cols[4].replace('"', "").replace("'", "").strip()[:-2]
-            )
-            end_date_utc = (
-                cols[5].replace('"', "").replace("'", "").strip()[:-2]
-            )
-            creation_date_utc = (
-                cols[6].replace('"', "").replace("'", "").strip()
-            )
+            external_file_name = cols[3].replace('"', "").replace("'", "").strip()
+            start_date_utc = cols[4].replace('"', "").replace("'", "").strip()[:-2]
+            end_date_utc = cols[5].replace('"', "").replace("'", "").strip()[:-2]
+            creation_date_utc = cols[6].replace('"', "").replace("'", "").strip()
 
             keywords = [
                 ("tigm", "odf"),
@@ -3859,21 +3671,16 @@ class LoadPDS:
 
             # Check if both words in any pair appear in the file_label
             if any(
-                all(word in file_label.lower() for word in pair)
-                for pair in keywords
+                all(word in file_label.lower() for word in pair) for pair in keywords
             ):
                 try:
-                    start_date_utc = self.format_string_to_datetime(
-                        start_date_utc
-                    )
+                    start_date_utc = self.format_string_to_datetime(start_date_utc)
                     end_date_utc = self.format_string_to_datetime(end_date_utc)
                     creation_date_utc = self.format_string_to_datetime(
                         creation_date_utc
                     )
                 except ValueError:
-                    print(
-                        "Skipping time conversion due to invalid date format."
-                    )
+                    print("Skipping time conversion due to invalid date format.")
                     continue  # Skip rows with invalid date format
 
                 # Use setdefault to ensure the key exists and initialize lists if not
@@ -3893,13 +3700,9 @@ class LoadPDS:
                 cumindex_table[pds_repo]["external_file_name"].append(
                     external_file_name
                 )
-                cumindex_table[pds_repo]["start_date_utc"].append(
-                    start_date_utc
-                )
+                cumindex_table[pds_repo]["start_date_utc"].append(start_date_utc)
                 cumindex_table[pds_repo]["end_date_utc"].append(end_date_utc)
-                cumindex_table[pds_repo]["creation_date_utc"].append(
-                    creation_date_utc
-                )
+                cumindex_table[pds_repo]["creation_date_utc"].append(creation_date_utc)
 
         # Return the cumindex_table
         return cumindex_table
@@ -3937,9 +3740,7 @@ class LoadPDS:
         input_mission = "grail-a"
 
         # ODF files
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} ODF files:")
         url_radio_science_files = [
             "https://pds-geosciences.wustl.edu/grail/grail-l-rss-2-edr-v1/grail_0201/odf/"
@@ -3962,9 +3763,7 @@ class LoadPDS:
             print("No Radio Science files to download this time.")
 
         # Clock Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Clock Kernels:")
         url_clock_files = "https://naif.jpl.nasa.gov/pub/naif/pds/data/grail-l-spice-6-v1.0/grlsp_1000/data/sclk/"
         wanted_clock_files = self.get_latest_clock_kernel_name(input_mission)
@@ -3981,9 +3780,7 @@ class LoadPDS:
             print("No sclk files to download this time.")
 
         # Frame Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Frame Kernels:")
         url_frame_files = "https://naif.jpl.nasa.gov/pub/naif/pds/data/grail-l-spice-6-v1.0/grlsp_1000/data/fk/"
         wanted_frame_files = ["grail_v07.tf"]
@@ -4000,9 +3797,7 @@ class LoadPDS:
             print("No fk files to download this time.")
 
             # maneuver Files
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Maneuver Files:")
         url_man_files = "https://pds-geosciences.wustl.edu/grail/grail-l-lgrs-2-edr-v1/grail_0001/level_0/2012_04_06/"
         wanted_man_files = ["mas00_2012_04_06_a_04.asc"]
@@ -4019,9 +3814,7 @@ class LoadPDS:
             print("No maneuver files to download this time.")
 
             # Antenna Switch Files
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Antenna Switch Files:")
 
         url_antenna_switch_files = "https://pds-geosciences.wustl.edu/grail/grail-l-lgrs-3-cdr-v1/grail_0101/level_1b/"
@@ -4044,9 +3837,7 @@ class LoadPDS:
 
             # Planetary and Ephemeris Kernels
         spk_files_to_load = []
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} SPK Kernels:")
         url_spk_files = [
             "https://naif.jpl.nasa.gov/pub/naif/pds/data/grail-l-spice-6-v1.0/grlsp_1000/data/spk/"
@@ -4061,14 +3852,12 @@ class LoadPDS:
             )
         else:
             for url_spk_file in url_spk_files:
-                spk_files_to_load = (
-                    self.dynamic_download_url_files_time_interval(
-                        input_mission,
-                        local_path=local_folder,
-                        start_date=start_date,
-                        end_date=end_date,
-                        url=url_spk_file,
-                    )
+                spk_files_to_load = self.dynamic_download_url_files_time_interval(
+                    input_mission,
+                    local_path=local_folder,
+                    start_date=start_date,
+                    end_date=end_date,
+                    url=url_spk_file,
                 )
 
         if spk_files_to_load:
@@ -4077,23 +3866,19 @@ class LoadPDS:
             print("No spk files to download this time.")
 
             # Orientation Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Orientation Kernels:")
         measured_url_ck_files = [
             "https://naif.jpl.nasa.gov/pub/naif/pds/data/grail-l-spice-6-v1.0/grlsp_1000/data/ck/"
         ]
 
         if len(measured_url_ck_files) == 1:
-            measured_ck_files_to_load = (
-                self.dynamic_download_url_files_time_interval(
-                    input_mission,
-                    local_path=local_folder,
-                    start_date=start_date,
-                    end_date=end_date,
-                    url=measured_url_ck_files[0],
-                )
+            measured_ck_files_to_load = self.dynamic_download_url_files_time_interval(
+                input_mission,
+                local_path=local_folder,
+                start_date=start_date,
+                end_date=end_date,
+                url=measured_url_ck_files[0],
             )
         else:
             for measured_url_ck_file in measured_url_ck_files:
@@ -4113,12 +3898,8 @@ class LoadPDS:
             print("No ck files to download this time.")
 
             # Tropospheric corrections
-        print(
-            "================================================================"
-        )
-        print(
-            f"Download {input_mission.upper()} Tropospheric Corrections Files"
-        )
+        print("================================================================")
+        print(f"Download {input_mission.upper()} Tropospheric Corrections Files")
         url_tropo_files = "https://pds-geosciences.wustl.edu/grail/grail-l-rss-2-edr-v1/grail_0201/ancillary/tro/"
         tropo_files_to_load = self.dynamic_download_url_files_time_interval(
             input_mission,
@@ -4134,9 +3915,7 @@ class LoadPDS:
             print("No tropospheric files to download this time.")
 
             # Ionospheric corrections
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Ionospheric Corrections Files")
         url_ion_files = "https://pds-geosciences.wustl.edu/grail/grail-l-rss-2-edr-v1/grail_0201/ancillary/ion/"
         ion_files_to_load = self.dynamic_download_url_files_time_interval(
@@ -4191,9 +3970,7 @@ class LoadPDS:
         input_mission = "grail-b"
 
         # ODF files
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} ODF files:")
         url_radio_science_files = [
             "https://pds-geosciences.wustl.edu/grail/grail-l-rss-2-edr-v1/grail_0201/odf/"
@@ -4216,9 +3993,7 @@ class LoadPDS:
             print("No Radio Science files to download this time.")
 
         # Clock Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Clock Kernels:")
         url_clock_files = "https://naif.jpl.nasa.gov/pub/naif/pds/data/grail-l-spice-6-v1.0/grlsp_1000/data/sclk/"
         wanted_clock_files = self.get_latest_clock_kernel_name(input_mission)
@@ -4235,9 +4010,7 @@ class LoadPDS:
             print("No sclk files to download this time.")
 
         # Frame Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Frame Kernels:")
         url_frame_files = "https://naif.jpl.nasa.gov/pub/naif/pds/data/grail-l-spice-6-v1.0/grlsp_1000/data/fk/"
         wanted_frame_files = ["grail_v07.tf"]
@@ -4254,9 +4027,7 @@ class LoadPDS:
             print("No fk files to download this time.")
 
             # maneuver Files
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Maneuver Files:")
         url_man_files = "https://pds-geosciences.wustl.edu/grail/grail-l-lgrs-2-edr-v1/grail_0001/level_0/"
         wanted_man_files = ["mas00_2012_04_06_a_04.asc"]
@@ -4290,9 +4061,7 @@ class LoadPDS:
 
             # Planetary and Ephemeris Kernels
         spk_files_to_load = []
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} SPK Kernels:")
         url_spk_files = [
             "https://naif.jpl.nasa.gov/pub/naif/pds/data/grail-l-spice-6-v1.0/grlsp_1000/data/spk/"
@@ -4307,14 +4076,12 @@ class LoadPDS:
             )
         else:
             for url_spk_file in url_spk_files:
-                spk_files_to_load = (
-                    self.dynamic_download_url_files_time_interval(
-                        input_mission,
-                        local_path=local_folder,
-                        start_date=start_date,
-                        end_date=end_date,
-                        url=url_spk_file,
-                    )
+                spk_files_to_load = self.dynamic_download_url_files_time_interval(
+                    input_mission,
+                    local_path=local_folder,
+                    start_date=start_date,
+                    end_date=end_date,
+                    url=url_spk_file,
                 )
 
         if spk_files_to_load:
@@ -4323,23 +4090,19 @@ class LoadPDS:
             print("No spk files to download this time.")
 
             # Orientation Kernels
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Orientation Kernels:")
         measured_url_ck_files = [
             "https://naif.jpl.nasa.gov/pub/naif/pds/data/grail-l-spice-6-v1.0/grlsp_1000/data/ck/"
         ]
 
         if len(measured_url_ck_files) == 1:
-            measured_ck_files_to_load = (
-                self.dynamic_download_url_files_time_interval(
-                    input_mission,
-                    local_path=local_folder,
-                    start_date=start_date,
-                    end_date=end_date,
-                    url=measured_url_ck_files[0],
-                )
+            measured_ck_files_to_load = self.dynamic_download_url_files_time_interval(
+                input_mission,
+                local_path=local_folder,
+                start_date=start_date,
+                end_date=end_date,
+                url=measured_url_ck_files[0],
             )
         else:
             for measured_url_ck_file in measured_url_ck_files:
@@ -4359,12 +4122,8 @@ class LoadPDS:
             print("No ck files to download this time.")
 
             # Tropospheric corrections
-        print(
-            "================================================================"
-        )
-        print(
-            f"Download {input_mission.upper()} Tropospheric Corrections Files"
-        )
+        print("================================================================")
+        print(f"Download {input_mission.upper()} Tropospheric Corrections Files")
         url_tropo_files = "https://pds-geosciences.wustl.edu/grail/grail-l-rss-2-edr-v1/grail_0201/ancillary/tro/"
         tropo_files_to_load = self.dynamic_download_url_files_time_interval(
             input_mission,
@@ -4380,9 +4139,7 @@ class LoadPDS:
             print("No tropospheric files to download this time.")
 
             # Ionospheric corrections
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Ionospheric Corrections Files")
         url_ion_files = "https://pds-geosciences.wustl.edu/grail/grail-l-rss-2-edr-v1/grail_0201/ancillary/ion/"
         ion_files_to_load = self.dynamic_download_url_files_time_interval(
@@ -4413,7 +4170,11 @@ class LoadPDS:
     ########################################################################################################################################
 
     def get_ro_files(
-        self, local_folder, start_date, end_date, radio_observation_type=None,
+        self,
+        local_folder,
+        start_date,
+        end_date,
+        radio_observation_type=None,
         skip_kernel_downloads=False,
     ):
         """
@@ -4447,9 +4208,7 @@ class LoadPDS:
         input_mission = "ro"
 
         # Fetch radio science URLs once and reuse for both tropospheric and radio science loops
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Discovering {input_mission.upper()} Radio Science Archive URLs:")
         cached_radio_science_urls = self.get_url_ro_radio_science_files(
             start_date, end_date, radio_observation_type
@@ -4457,9 +4216,7 @@ class LoadPDS:
         print(f"Found {len(cached_radio_science_urls)} Radio Science archive URL(s).")
 
         # Tropospheric corrections
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(
             f"Download {input_mission.upper()} Tropospheric and Ionospheric Corrections Files"
         )
@@ -4496,13 +4253,9 @@ class LoadPDS:
                     self.ancillary_files_to_load[key].extend(tropo_files_to_load)
 
                 else:
-                    print(
-                        "No tropospheric or ionospheric files to download this time."
-                    )
+                    print("No tropospheric or ionospheric files to download this time.")
 
-        print(
-            "================================================================"
-        )
+        print("================================================================")
         print(f"Download {input_mission.upper()} Radio Science Kernels:")
 
         # Build all DP2 URLs
@@ -4514,9 +4267,13 @@ class LoadPDS:
                     + "DATA/LEVEL02/CLOSED_LOOP/"
                     + closed_loop_type
                 )
-                radio_science_dp2_urls.append((url_radio_science_file, closed_loop_type))
+                radio_science_dp2_urls.append(
+                    (url_radio_science_file, closed_loop_type)
+                )
 
-        print(f"Scanning {len(radio_science_dp2_urls)} archive URL(s) for IFMS/DP2 files...")
+        print(
+            f"Scanning {len(radio_science_dp2_urls)} archive URL(s) for IFMS/DP2 files..."
+        )
 
         # Process all URLs quietly and collect results
         all_skipped = []
@@ -4531,14 +4288,18 @@ class LoadPDS:
                     url=url_radio_science_file,
                     verbose=False,
                 )
-                key = f"{closed_loop_type.split('/')[0]}_{closed_loop_type.split('/')[1]}"
+                key = (
+                    f"{closed_loop_type.split('/')[0]}_{closed_loop_type.split('/')[1]}"
+                )
                 if key not in self.radio_science_files_to_load:
                     self.radio_science_files_to_load[key] = []
                 self.radio_science_files_to_load[key].extend(files)
                 all_skipped.extend(self._last_skipped_files)
                 all_downloaded.extend(self._last_downloaded_files)
             except Exception as e:
-                print(f"Error downloading radio science files from {closed_loop_type}: {e}")
+                print(
+                    f"Error downloading radio science files from {closed_loop_type}: {e}"
+                )
                 continue
 
         # Print summary
@@ -4550,7 +4311,9 @@ class LoadPDS:
         if all_downloaded:
             dest_folder = os.path.join(local_folder, "dp2")
             total = len(all_downloaded)
-            print(f"\nDownloaded {total} new Radio Science file(s) to {dest_folder}/:\n")
+            print(
+                f"\nDownloaded {total} new Radio Science file(s) to {dest_folder}/:\n"
+            )
             for i, f in enumerate(all_downloaded, 1):
                 print(f"  [{i}/{total}] {os.path.basename(f)}")
             print()
@@ -4559,9 +4322,7 @@ class LoadPDS:
 
         if not skip_kernel_downloads:
             # Clock files
-            print(
-                "================================================================"
-            )
+            print("================================================================")
             print(f"Download {input_mission.upper()} Clock Kernels:")
             url_clock_files = (
                 "https://spiftp.esac.esa.int/data/SPICE/ROSETTA/kernels/sclk/"
@@ -4581,9 +4342,7 @@ class LoadPDS:
             else:
                 print("No sclk files to download this time.")
 
-            print(
-                "================================================================"
-            )
+            print("================================================================")
             print(f"Download {input_mission.upper()} Frame Kernels:")
             url_frame_files = (
                 "https://spiftp.esac.esa.int/data/SPICE/ROSETTA/kernels/fk/"
@@ -4610,9 +4369,7 @@ class LoadPDS:
                 print("No fk files to download this time.")
 
             # Spk files
-            print(
-                "================================================================"
-            )
+            print("================================================================")
             print(f"Download {input_mission.upper()} SPK Kernels:")
             url_spk_files = [
                 "https://spiftp.esac.esa.int/data/SPICE/ROSETTA/kernels/spk/"
@@ -4636,9 +4393,7 @@ class LoadPDS:
                 print("No spk files to download this time.")
 
             # Orientation files
-            print(
-                "================================================================"
-            )
+            print("================================================================")
             print(f"Download {input_mission.upper()} CK Kernels:")
             url_ck_files = [
                 "https://spiftp.esac.esa.int/data/SPICE/ROSETTA/kernels/ck/"
@@ -4661,9 +4416,7 @@ class LoadPDS:
             else:
                 print("No ck files to download this time.")
 
-        print(
-            "----------------------------------------------------------------"
-        )
+        print("----------------------------------------------------------------")
         print(
             "All requested, relevant and previously non-existing RO files have been now downloaded. Enjoy!"
         )
@@ -4680,7 +4433,9 @@ class LoadPDS:
     ):
 
         url = "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/RSI/RO-C-RSI-1-2-3-EXT3-1881-V1.0/AAREADME.TXT"
-        radio_science_base_url = "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/RSI/"
+        radio_science_base_url = (
+            "https://archives.esac.esa.int/psa/ftp/INTERNATIONAL-ROSETTA-MISSION/RSI/"
+        )
 
         mapping_dict = self.get_ro_rsi_volume_ID_mapping(url)
         mapping_dict = self.add_ro_mission_phase_designation(mapping_dict)
@@ -4707,16 +4462,10 @@ class LoadPDS:
                         # Extract target and mission phase abbreviation (Abbn)
                         target = entry.get("target")
                         abbn = entry.get("abbn")
-                        rsi_volume_ID_num = entry.get(
-                            "rsi_volume_id_num", ""
-                        ).strip()
+                        rsi_volume_ID_num = entry.get("rsi_volume_id_num", "").strip()
 
                         # Guard against None or empty values
-                        if (
-                            not target
-                            or not abbn
-                            or not rsi_volume_ID_num
-                        ):
+                        if not target or not abbn or not rsi_volume_ID_num:
                             print(
                                 f"Warning: Incomplete mapping for volume {rsi_id} "
                                 f"(target={target!r}, abbn={abbn!r}, "
@@ -4749,13 +4498,9 @@ class LoadPDS:
                             if volume_ID_url not in self.radio_science_urls:
                                 self.radio_science_urls.append(volume_ID_url)
                         else:
-                            print(
-                                f"URL does not exist: {volume_ID_url}"
-                            )
+                            print(f"URL does not exist: {volume_ID_url}")
                     except Exception as e:
-                        print(
-                            f"Error occurred for rsi_volume_id {rsi_id}: {e}"
-                        )
+                        print(f"Error occurred for rsi_volume_id {rsi_id}: {e}")
                         continue
 
         if len(self.radio_science_urls) > 0:
@@ -4799,9 +4544,7 @@ class LoadPDS:
                     record_date = item.get("start_date_utc")
                     if record_date is None:
                         # Log or skip entries without a valid date.
-                        print(
-                            f"Warning: Missing start_date_utc in item: {item}"
-                        )
+                        print(f"Warning: Missing start_date_utc in item: {item}")
                         continue
                     # Check if the record_date falls within the input interval.
                     if start_date <= record_date <= end_date:
@@ -4857,12 +4600,8 @@ class LoadPDS:
 
         for phase, dates in mission_phases.items():
             # Convert the start date and end date string using the provided method.
-            dates["start_dt"] = self.format_string_to_datetime(
-                dates["start"]
-            ).date()
-            dates["end_dt"] = self.format_string_to_datetime(
-                dates["end"]
-            ).date()
+            dates["start_dt"] = self.format_string_to_datetime(dates["start"]).date()
+            dates["end_dt"] = self.format_string_to_datetime(dates["end"]).date()
 
         # Cache mapping: map each unique entry start date (as date object) to its phase abbreviation.
         date_to_phase = {}
@@ -4957,9 +4696,11 @@ class LoadPDS:
                 break
             except requests.exceptions.RequestException as e:
                 if attempt < max_retries:
-                    wait_time = 2 ** attempt
-                    print(f"Attempt {attempt}/{max_retries} failed for {url}: {e}. "
-                          f"Retrying in {wait_time}s...")
+                    wait_time = 2**attempt
+                    print(
+                        f"Attempt {attempt}/{max_retries} failed for {url}: {e}. "
+                        f"Retrying in {wait_time}s..."
+                    )
                     time.sleep(wait_time)
                 else:
                     raise ConnectionError(
@@ -4981,9 +4722,7 @@ class LoadPDS:
             # Remove the "RORSI_" prefix to keep only the numeric part.
             rsi_volume_id_num = full_rsi_volume_id.replace("RORSI_", "")
             volume_id = match.group(2)
-            start_date_file = (
-                match.group(3) if len(match.group(3)) == 10 else None
-            )
+            start_date_file = match.group(3) if len(match.group(3)) == 10 else None
             start_date_utc = (
                 self.format_string_to_datetime(start_date_file)
                 if start_date_file is not None
@@ -4993,9 +4732,7 @@ class LoadPDS:
 
             # Add entry to dictionary
             if full_rsi_volume_id not in self.mapping_dict:
-                self.mapping_dict[full_rsi_volume_id] = (
-                    []
-                )  # Initialize as a list
+                self.mapping_dict[full_rsi_volume_id] = []  # Initialize as a list
 
             # Append the current entry to the list
             self.mapping_dict[full_rsi_volume_id].append(

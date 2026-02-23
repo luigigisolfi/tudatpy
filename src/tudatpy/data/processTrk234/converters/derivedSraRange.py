@@ -1,4 +1,6 @@
-from tudatpy.estimation.observations_setup.ancillary_settings import dsn_n_way_range_ancillary_settings
+from tudatpy.estimation.observations_setup.ancillary_settings import (
+    dsn_n_way_range_ancillary_settings,
+)
 from tudatpy.estimation.observable_models_setup.links import link_definition, receiver
 from tudatpy.estimation.observable_models_setup.model_settings import ObservableType
 

@@ -67,15 +67,15 @@ weights_test_combinations = [
 ]
 
 
-#@pytest.mark.parametrize("inp,expected", get_observations_input)
-#def test_BatchMPC_getobservations(inp, expected):
+# @pytest.mark.parametrize("inp,expected", get_observations_input)
+# def test_BatchMPC_getobservations(inp, expected):
 #    query = BatchMPC()
 #    query.get_observations(inp)
 #    assert set(query.MPC_objects) == expected
 
 
-#@pytest.mark.parametrize("inp,errtype,errvalue", get_observations_input2)
-#def test_BatchMPC_getobservations2(inp, errtype, errvalue):
+# @pytest.mark.parametrize("inp,errtype,errvalue", get_observations_input2)
+# def test_BatchMPC_getobservations2(inp, errtype, errvalue):
 #    query = BatchMPC()
 #    with pytest.raises(Exception) as exc_info:
 #        query.get_observations(inp)
@@ -110,9 +110,7 @@ def test_BatchMPC_to_tudat(mpc_code):
     bodies = environment_setup.create_system_of_bodies(body_settings)
 
     observation_collection = query.to_tudat(
-        bodies=bodies,
-        included_satellites=None,
-        apply_star_catalog_debias=False
+        bodies=bodies, included_satellites=None, apply_star_catalog_debias=False
     )
 
     # reshape to [2, ...] where 2 is RA + DEC
@@ -157,7 +155,7 @@ def test_BatchMPC_to_tudat_with_satelite(mpc_code):
     observation_collection = query.to_tudat(
         bodies=bodies,
         included_satellites={"C51": "Wise"},
-        apply_star_catalog_debias=False
+        apply_star_catalog_debias=False,
     )
 
     # reshape to [2, ...] where 2 is RA + DEC

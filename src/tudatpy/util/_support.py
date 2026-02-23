@@ -1,5 +1,6 @@
 import numpy as np
 from tudatpy.math import interpolators
+
 # from tudatpy.dynamics.propagation_setup import propagator
 import os
 from typing import Union, TYPE_CHECKING, Callable
@@ -119,10 +120,8 @@ def compare_results(
             baseline_results, interpolator_settings
         )
     )
-    new_results_interpolator = (
-        interpolators.create_one_dimensional_vector_interpolator(
-            new_results, interpolator_settings
-        )
+    new_results_interpolator = interpolators.create_one_dimensional_vector_interpolator(
+        new_results, interpolator_settings
     )
 
     # Compute the different between the baseline and the new results
@@ -201,9 +200,7 @@ class redirect_std:
             os.close(link)
 
 
-def pareto_optimums(
-    _points: list, operator: Union[None, list[Callable]] = None
-):
+def pareto_optimums(_points: list, operator: Union[None, list[Callable]] = None):
     """Compute Pareto optimums from a set of points.
 
     These points are all individually optimums, meaning that to be better in one dimension, they have to be worse in another one.
@@ -268,10 +265,9 @@ def pareto_optimums(
     pareto_optimal = np.ones(points.shape[0], dtype=bool)
     for i, c in enumerate(points):
         if pareto_optimal[i]:
-            pareto_optimal[pareto_optimal] = np.any(
-                points[pareto_optimal] <= c, axis=1
-            )
+            pareto_optimal[pareto_optimal] = np.any(points[pareto_optimal] <= c, axis=1)
     return pareto_optimal
+
 
 #
 # def split_history(
@@ -364,6 +360,7 @@ def vector2matrix(flat_matrix: np.ndarray):
     """
     return flat_matrix.reshape(3, 3)
 
+
 def transform_integer_to_roman_number(num: int) -> str:
     """Converts an integer to a Roman numeral string.
 
@@ -380,10 +377,21 @@ def transform_integer_to_roman_number(num: int) -> str:
     """
     # For converting integers to Roman numerals
     _ROMAN_NUMERAL_MAP = {
-        1000: 'M', 900: 'CM', 500: 'D', 400: 'CD', 100: 'C', 90: 'XC',
-        50: 'L', 40: 'XL', 10: 'X', 9: 'IX', 5: 'V', 4: 'IV', 1: 'I'
+        1000: "M",
+        900: "CM",
+        500: "D",
+        400: "CD",
+        100: "C",
+        90: "XC",
+        50: "L",
+        40: "XL",
+        10: "X",
+        9: "IX",
+        5: "V",
+        4: "IV",
+        1: "I",
     }
-    roman_num = ''
+    roman_num = ""
     for val, syb in _ROMAN_NUMERAL_MAP.items():
         while num >= val:
             roman_num += syb

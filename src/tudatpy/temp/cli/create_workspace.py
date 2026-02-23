@@ -2,8 +2,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser(
-        description=("Configure a workspace given "
-                     "a tudat-space.yml file.")
+        description=("Configure a workspace given " "a tudat-space.yml file.")
     )
     parser.add_argument(
         "forge_file_directory",

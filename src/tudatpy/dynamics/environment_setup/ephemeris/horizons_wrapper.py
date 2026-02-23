@@ -212,11 +212,7 @@ class HorizonsQuery:
         # epoch range format:
         # epoch_list IS none rest is NOT none
         if epoch_list is None:
-            if (
-                (epoch_start is None)
-                or (epoch_end is None)
-                or (epoch_step is None)
-            ):
+            if (epoch_start is None) or (epoch_end is None) or (epoch_step is None):
                 raise ValueError(
                     "Must specify either a list of times in sec since J2000 "
                     + "or a combined start, end and step parameters"
@@ -235,11 +231,7 @@ class HorizonsQuery:
 
         # epoch list format:
         # start step end IS none, list NOT none
-        elif (
-            (epoch_start is None)
-            and (epoch_end is None)
-            and (epoch_step is None)
-        ):
+        elif (epoch_start is None) and (epoch_end is None) and (epoch_step is None):
             if epoch_list is None:
                 raise ValueError(
                     "Must specify either a list of times in sec since J2000 "
@@ -313,11 +305,9 @@ class HorizonsQuery:
         # query is smaller than limit -> one batch
         # seperate check for list as the num lines is smaller
         elif (
-            (self.epoch_type != "list")
-            and (num_lines < HorizonsQuery.query_limit)
+            (self.epoch_type != "list") and (num_lines < HorizonsQuery.query_limit)
         ) or (
-            (self.epoch_type == "list")
-            and (num_lines < HorizonsQuery.query_limit_list)
+            (self.epoch_type == "list") and (num_lines < HorizonsQuery.query_limit_list)
         ):
             if self.epoch_type == "list":
                 # convert seconds since J2000 TDB to JD TDB
@@ -343,9 +333,7 @@ class HorizonsQuery:
         elif extended_query:
             # case where its a list -> split list
             if self.epoch_type == "list":
-                num_splits = math.ceil(
-                    num_lines / HorizonsQuery.query_limit_list
-                )
+                num_splits = math.ceil(num_lines / HorizonsQuery.query_limit_list)
 
                 epoch_def = self._format_time_list(epoch_list)
                 splits = np.array_split(epoch_def, num_splits)
@@ -363,9 +351,7 @@ class HorizonsQuery:
                     self.query_lengths.append(len(split))
 
             # Case where it is a range.
-            elif (self.epoch_type == "range") or (
-                self.epoch_type == "partition"
-            ):
+            elif (self.epoch_type == "range") or (self.epoch_type == "partition"):
                 if self.epoch_type == "partition":
                     raise NotImplementedError(
                         "Using number of divisions for time "
@@ -389,9 +375,7 @@ class HorizonsQuery:
                 formatt = r"%Y-%m-%d %H:%M:%S.%f"
 
                 while next_limit < end_astro:
-                    query_len = math.ceil(
-                        (next_limit - next_start) / ts_seconds
-                    )
+                    query_len = math.ceil((next_limit - next_start) / ts_seconds)
                     self.query_lengths.append(query_len)
 
                     if self.epoch_type == "partition":
@@ -503,9 +487,7 @@ class HorizonsQuery:
         if self._target_full_name is None:
             self._name = None
         else:
-            num_between_brackets = re.findall(
-                r"\((.*?)\)", self._target_full_name
-            )
+            num_between_brackets = re.findall(r"\((.*?)\)", self._target_full_name)
 
             # comet
             if ("/" in self._target_full_name) and (
@@ -645,9 +627,7 @@ class HorizonsQuery:
         elif len(alpha_part) == 0:
             time_seconds = None
         else:
-            raise ValueError(
-                "Unrecognized time step, use '1d', '1min', '2 hours' etc."
-            )
+            raise ValueError("Unrecognized time step, use '1d', '1min', '2 hours' etc.")
 
         start_astro = self._convert_time_to_astropy(start)
         end_astro = self._convert_time_to_astropy(end)
@@ -768,9 +748,7 @@ class HorizonsQuery:
             returns an n by 7 array with the time in seconds since J2000 TDB,
             and the cartesian position and velocities.
         """
-        raw = self.vectors(
-            frame_orientation=frame_orientation, aberations=aberations
-        )
+        raw = self.vectors(frame_orientation=frame_orientation, aberations=aberations)
 
         # A.D. 2019-Jan-05 22:40:00.0000
         timeformatt = "A.D. %Y-%b-%d %H:%M:%S.%f"
@@ -779,9 +757,7 @@ class HorizonsQuery:
             raw.to_pandas()
             # format time: first parse the time string and then into seconds since J2000
             .assign(
-                epoch_dt=lambda x: pd.to_datetime(
-                    x.datetime_str, format=timeformatt
-                )
+                epoch_dt=lambda x: pd.to_datetime(x.datetime_str, format=timeformatt)
             )
             .assign(
                 epoch_seconds_TDB=lambda x: (
@@ -791,28 +767,19 @@ class HorizonsQuery:
                     )
                     * constants.JULIAN_DAY
                 )
-                + (
-                    (Time(x.epoch_dt, format="datetime64").jd2)
-                    * constants.JULIAN_DAY
-                )
+                + ((Time(x.epoch_dt, format="datetime64").jd2) * constants.JULIAN_DAY)
             )
             .assign(x=lambda i: i.x * constants.ASTRONOMICAL_UNIT)
             .assign(y=lambda i: i.y * constants.ASTRONOMICAL_UNIT)
             .assign(z=lambda i: i.z * constants.ASTRONOMICAL_UNIT)
             .assign(
-                vx=lambda i: i.vx
-                * constants.ASTRONOMICAL_UNIT
-                / constants.JULIAN_DAY
+                vx=lambda i: i.vx * constants.ASTRONOMICAL_UNIT / constants.JULIAN_DAY
             )
             .assign(
-                vy=lambda i: i.vy
-                * constants.ASTRONOMICAL_UNIT
-                / constants.JULIAN_DAY
+                vy=lambda i: i.vy * constants.ASTRONOMICAL_UNIT / constants.JULIAN_DAY
             )
             .assign(
-                vz=lambda i: i.vz
-                * constants.ASTRONOMICAL_UNIT
-                / constants.JULIAN_DAY
+                vz=lambda i: i.vz * constants.ASTRONOMICAL_UNIT / constants.JULIAN_DAY
             )
             .loc[:, ["epoch_seconds_TDB", "x", "y", "z", "vx", "vy", "vz"]]
         )
@@ -876,23 +843,23 @@ class HorizonsQuery:
     def _parse_horizons_time(self, time_string: str) -> Time:
         """
         Parses a JPL Horizons time string by trying multiple formats.
-    
+
         This function attempts to parse the time string first with microseconds,
         then without microseconds, and finally without seconds.
-    
+
         Args:
             time_string (str): The datetime string from JPL Horizons.
-    
+
         Returns:
             astropy.time.Time: The parsed time object.
-    
+
         Raises:
             ValueError: If the time string does not match any of the expected formats.
         """
         time_format_with_ms = "%Y-%b-%d %H:%M:%S.%f"
         time_format_without_ms = "%Y-%b-%d %H:%M:%S"
         time_format_without_s = "%Y-%b-%d %H:%M"
-    
+
         try:
             # First, try the format that includes microseconds
             return Time.strptime(time_string, time_format_with_ms)
@@ -911,11 +878,11 @@ class HorizonsQuery:
                     ) from e
 
     def ephemerides(
-            self,
-            reference_system: str = "J2000",
-            extra_precision: bool = False,
-            *args,
-            **kwargs,
+        self,
+        reference_system: str = "J2000",
+        extra_precision: bool = False,
+        *args,
+        **kwargs,
     ) -> astropy.table.Table:
         """
         Implements the JPL Horizons ephemerides API and returns it in a raw Astropy table format.
@@ -972,21 +939,24 @@ class HorizonsQuery:
 
             # Use the helper function to parse each time string individually
             horizons_utc_array = res["datetime_str"].data
-            astropy_times = np.array([self._parse_horizons_time(ts) for ts in horizons_utc_array])
+            astropy_times = np.array(
+                [self._parse_horizons_time(ts) for ts in horizons_utc_array]
+            )
             iso_strings_utc = [t.iso for t in astropy_times]
             # Use Tudat's time representation for consistent conversion
             tudat_utc_times = [DateTime.from_iso_string(iso) for iso in iso_strings_utc]
             utc_seconds = [time.epoch() for time in tudat_utc_times]
-            tudat_julian_days = [DateTime.to_julian_day(utc_time) for utc_time in tudat_utc_times]
+            tudat_julian_days = [
+                DateTime.to_julian_day(utc_time) for utc_time in tudat_utc_times
+            ]
 
             # Convert UTC seconds to TDB seconds
             time_scale_converter = time_representation.default_time_scale_converter()
             tdb_seconds = [
                 time_scale_converter.convert_time(
-                    time_representation.utc_scale,
-                    time_representation.tdb_scale,
-                    epoch
-                ) for epoch in utc_seconds
+                    time_representation.utc_scale, time_representation.tdb_scale, epoch
+                )
+                for epoch in utc_seconds
             ]
             res["datetime_str_UTC"] = iso_strings_utc
             res["datetime_jd"] = tudat_julian_days
@@ -999,12 +969,12 @@ class HorizonsQuery:
         return raw
 
     def interpolated_observations(
-            self,
-            degrees: bool = False,
-            reference_system: str = "J2000",
-            extra_precision: bool = True,
-            *args,
-            **kwargs,
+        self,
+        degrees: bool = False,
+        reference_system: str = "J2000",
+        extra_precision: bool = True,
+        *args,
+        **kwargs,
     ) -> np.ndarray:
         """
         Retrieves interpolated Right Ascension and Declination from the Horizons ephemerides API.
@@ -1040,10 +1010,9 @@ class HorizonsQuery:
 
         if not degrees:
             res[["RA", "DEC"]] = res[["RA", "DEC"]].apply(np.radians)
-            res['RA'] = (res['RA'] + np.pi) % (2 * np.pi) - np.pi
+            res["RA"] = (res["RA"] + np.pi) % (2 * np.pi) - np.pi
 
         return res.to_numpy()
-
 
     def interpolated_station_angles(
         self,

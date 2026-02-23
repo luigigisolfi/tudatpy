@@ -2,6 +2,7 @@ import argparse
 import os
 import logging
 import sys
+
 # from .._version import __version__
 import create_project
 
@@ -57,12 +58,7 @@ class CreateProject(Subcommand):
         )
 
     def __call__(self, args):
-        create_project.main(
-            args.name,
-            args.type,
-            args.directory,
-            args.config
-        )
+        create_project.main(args.name, args.type, args.directory, args.config)
 
 
 def main():

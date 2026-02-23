@@ -27,11 +27,9 @@ def render_templates(templates, path, **template_kwargs):
 # def render_simulation_template(simulation)
 
 
-def create_project(project_name,
-                   project_type,
-                   project_path=".",
-                   template_path="./templates",
-                   **kwargs):
+def create_project(
+    project_name, project_type, project_path=".", template_path="./templates", **kwargs
+):
     """
 
     Parameters
@@ -87,9 +85,11 @@ def create_project(project_name,
         # main_py_template = template_env.get_template("main.py.template")
         # root_templates.append(main_py_template)
 
-    template_kwargs = {"project_name": project_name,
-                       "project_type": project_type,
-                       **kwargs}
+    template_kwargs = {
+        "project_name": project_name,
+        "project_type": project_type,
+        **kwargs,
+    }
 
     render_templates(root_templates, abs_path_project, **template_kwargs)
     render_templates(kernel_templates, abs_path_kernel, **template_kwargs)
@@ -123,10 +123,7 @@ def test():
 
 
 def main(
-        project_name,
-        project_type="python",
-        project_path=".",
-        project_config_directory=None
+    project_name, project_type="python", project_path=".", project_config_directory=None
 ):
     kwargs = yaml2dict("config/base.yml")
     if project_config_directory:

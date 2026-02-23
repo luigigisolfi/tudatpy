@@ -135,9 +135,7 @@ class DependentVariableDictionary(dict):
         keyword-value pairs (`kwargs`).
         """
         if mapping is not None:
-            mapping = {
-                self.__read_key(key): value for key, value in mapping.items()
-            }
+            mapping = {self.__read_key(key): value for key, value in mapping.items()}
         else:
             mapping = {}
         if kwargs:
@@ -169,9 +167,7 @@ class DependentVariableDictionary(dict):
         """
         return super().__setitem__(self.__read_key(__key), __value)
 
-    def __getitem__(
-        self, __key: VariableSettings
-    ):  # -> dict[float: np.ndarray]:
+    def __getitem__(self, __key: VariableSettings):  # -> dict[float: np.ndarray]:
         """
         Retrieve the time history corresponding to a dependent variable, identified either by
         the dependent variable settings object corresponding to the dependent variable
@@ -278,9 +274,7 @@ def create_dependent_variable_dictionary(
     )
 
     # Retrieve /transposed/ time and dependent variable histories
-    time_history = result2array(
-        dynamics_simulator.dependent_variable_history
-    ).T[0, :]
+    time_history = result2array(dynamics_simulator.dependent_variable_history).T[0, :]
     dependent_variable_history = result2array(
         dynamics_simulator.dependent_variable_history
     ).T[1:, :]

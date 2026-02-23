@@ -8,16 +8,17 @@ from datetime import datetime, timedelta
 import requests
 import math
 
+
 class SpaceTrackQuery:
     def __init__(self, username=None, password=None):
         if not username:
-            username = input('space-track username: ')
+            username = input("space-track username: ")
         if not password:
-            password = getpass.getpass('space-track password: ')
+            password = getpass.getpass("space-track password: ")
 
         self.username = username
         self.password = password
-        self.spacetrack_url = 'https://www.space-track.org'
+        self.spacetrack_url = "https://www.space-track.org"
         self.download_tle = self.DownloadTle(self)  # Pass parent to subclass
 
     class DownloadTle:
@@ -26,23 +27,30 @@ class SpaceTrackQuery:
 
             # Optionally prompt again if parent credentials aren't available
             if not self.parent.username:
-                self.parent.username = input('space-track username: ')
+                self.parent.username = input("space-track username: ")
             if not self.parent.password:
-                self.parent.password = getpass.getpass('space-track password: ')
+                self.parent.password = getpass.getpass("space-track password: ")
 
             self.username = self.parent.username
             self.password = self.parent.password
             self.spacetrack_url = self.parent.spacetrack_url
 
         def latest_on_orbit(self):
-
             """
             This function retrieves the newest propagable element set for all on-orbit objects (according to Space-Track.org)
             :return: dictionary corresponding to the downloaded json file
             """
             with requests.Session() as s:
-                s.post(self.spacetrack_url+"/ajaxauth/login", json={'identity':self.username, 'password':self.password})
-                response = s.get(os.path.join(self.spacetrack_url,'basicspacedata/query/class/gp/OBJECT_TYPE/PAYLOAD/decay_date/null-val/epoch/%3Enow-30/orderby/norad_cat_id/format/json'))
+                s.post(
+                    self.spacetrack_url + "/ajaxauth/login",
+                    json={"identity": self.username, "password": self.password},
+                )
+                response = s.get(
+                    os.path.join(
+                        self.spacetrack_url,
+                        "basicspacedata/query/class/gp/OBJECT_TYPE/PAYLOAD/decay_date/null-val/epoch/%3Enow-30/orderby/norad_cat_id/format/json",
+                    )
+                )
                 json_name = "latest_on_orbit.json"
 
                 if response.status_code == 200:
@@ -55,12 +63,14 @@ class SpaceTrackQuery:
                         print(f"Data downloaded to {json_name} file.")
 
                 else:
-                    print("Failed to retrieve data from the API. Status code:", response.status_code)
+                    print(
+                        "Failed to retrieve data from the API. Status code:",
+                        response.status_code,
+                    )
 
             return json_data
 
-        def descending_epoch(self, N = None):
-
+        def descending_epoch(self, N=None):
             """
             This function retrieves the general perturbations (GP) class
             (newest SGP4 keplerian element set for each man-made earth-orbiting object tracked by the 18th Space Defense Squadron)
@@ -69,13 +79,26 @@ class SpaceTrackQuery:
             :return: dictionary corresponding to the downloaded json data
             """
             with requests.Session() as s:
-                s.post(self.spacetrack_url+"/ajaxauth/login", json={'identity':self.username, 'password':self.password})
+                s.post(
+                    self.spacetrack_url + "/ajaxauth/login",
+                    json={"identity": self.username, "password": self.password},
+                )
                 if N is not None and float(N):
                     json_name = f"gp_descending_{N}.json"
-                    response = s.get(os.path.join(self.spacetrack_url,f'basicspacedata/query/class/gp/OBJECT_TYPE/PAYLOAD/orderby/epoch desc/limit/{N}/format/json'))
+                    response = s.get(
+                        os.path.join(
+                            self.spacetrack_url,
+                            f"basicspacedata/query/class/gp/OBJECT_TYPE/PAYLOAD/orderby/epoch desc/limit/{N}/format/json",
+                        )
+                    )
                 else:
                     json_name = f"gp_descending.json"
-                    response = s.get(os.path.join(self.spacetrack_url,f'basicspacedata/query/class/gp/OBJECT_TYPE/PAYLOAD/orderby/epoch desc/format/json'))
+                    response = s.get(
+                        os.path.join(
+                            self.spacetrack_url,
+                            f"basicspacedata/query/class/gp/OBJECT_TYPE/PAYLOAD/orderby/epoch desc/format/json",
+                        )
+                    )
 
                 if response.status_code == 200:
                     queried_data = response.json()
@@ -86,25 +109,29 @@ class SpaceTrackQuery:
                         json.dump(json_data, json_file, indent=4)
 
                     if N != 1:
-                        filtered_values = self.parent.OMMUtils.filter_tles_keep_latest_creation_from_json(self, json_name)
-                        parts_json_name = json_name.split('.')[0].split('_')
-                        parts_json_name[-1] = f'{len(filtered_values)}'
-                        new_name = '_'.join(parts_json_name) + '.json'
-                        os.system(f'mv temp_filtered_tles.json {new_name}')
+                        filtered_values = self.parent.OMMUtils.filter_tles_keep_latest_creation_from_json(
+                            self, json_name
+                        )
+                        parts_json_name = json_name.split(".")[0].split("_")
+                        parts_json_name[-1] = f"{len(filtered_values)}"
+                        new_name = "_".join(parts_json_name) + ".json"
+                        os.system(f"mv temp_filtered_tles.json {new_name}")
 
                         if new_name != json_name:
-                            os.system(f'rm {json_name}')
+                            os.system(f"rm {json_name}")
                         print(f"Data downloaded to {new_name} file.")
 
                         print(f"Data downloaded to {json_name} file.")
 
                 else:
-                    print("Failed to retrieve data from the API. Status code:", response.status_code)
+                    print(
+                        "Failed to retrieve data from the API. Status code:",
+                        response.status_code,
+                    )
 
             return json_data
 
-        def single_norad_id(self, norad_id, N = 1):
-
+        def single_norad_id(self, norad_id, N=1):
             """
             This function retrieves the general perturbations (GP or GP history) class
             (newest SGP4 keplerian element set for each man-made earth-orbiting object tracked by the 18th Space Defense Squadron)
@@ -114,13 +141,26 @@ class SpaceTrackQuery:
             """
             filtered_dict = None
             with requests.Session() as s:
-                s.post(self.spacetrack_url+"/ajaxauth/login", json={'identity':self.username, 'password':self.password})
+                s.post(
+                    self.spacetrack_url + "/ajaxauth/login",
+                    json={"identity": self.username, "password": self.password},
+                )
                 if N is not None and float(N):
                     json_name = f"single_{norad_id}_{N}.json"
                     if N == 1:
-                        response = s.get(os.path.join(self.spacetrack_url,f'basicspacedata/query/class/gp/NORAD_CAT_ID/{norad_id}/orderby/epoch desc/limit/{N}/format/json'))
+                        response = s.get(
+                            os.path.join(
+                                self.spacetrack_url,
+                                f"basicspacedata/query/class/gp/NORAD_CAT_ID/{norad_id}/orderby/epoch desc/limit/{N}/format/json",
+                            )
+                        )
                     else:
-                        response = s.get(os.path.join(self.spacetrack_url,f'basicspacedata/query/class/gp_history/NORAD_CAT_ID/{norad_id}/orderby/epoch desc/limit/{N}/format/json'))
+                        response = s.get(
+                            os.path.join(
+                                self.spacetrack_url,
+                                f"basicspacedata/query/class/gp_history/NORAD_CAT_ID/{norad_id}/orderby/epoch desc/limit/{N}/format/json",
+                            )
+                        )
 
                 if response.status_code == 200:
                     queried_data = response.json()
@@ -135,26 +175,32 @@ class SpaceTrackQuery:
                     # among the duplicated ones (latest creation date)
 
                     if N != 1:
-                        filtered_values = self.parent.OMMUtils.filter_tles_keep_latest_creation_from_json(self, json_name)
-                        parts_json_name = json_name.split('.')[0].split('_')
-                        parts_json_name[-1] = f'{len(filtered_values)}'
-                        new_name = '_'.join(parts_json_name) + '.json'
-                        os.system(f'mv temp_filtered_tles.json {new_name}')
+                        filtered_values = self.parent.OMMUtils.filter_tles_keep_latest_creation_from_json(
+                            self, json_name
+                        )
+                        parts_json_name = json_name.split(".")[0].split("_")
+                        parts_json_name[-1] = f"{len(filtered_values)}"
+                        new_name = "_".join(parts_json_name) + ".json"
+                        os.system(f"mv temp_filtered_tles.json {new_name}")
 
                         if new_name != json_name:
-                            os.system(f'rm {json_name}')
+                            os.system(f"rm {json_name}")
                         print(f"Data downloaded to {new_name} file.")
 
                 else:
-                    print("Failed to retrieve data from the API. Status code:", response.status_code)
+                    print(
+                        "Failed to retrieve data from the API. Status code:",
+                        response.status_code,
+                    )
 
             if filtered_dict:
                 return filtered_dict
 
             return json_data
 
-        def filtered_by_oe_dict(self, filter_oe_dict, limit=100, output_file='filtered_results.json'):
-
+        def filtered_by_oe_dict(
+            self, filter_oe_dict, limit=100, output_file="filtered_results.json"
+        ):
             """
             :param filter_oe_dict: dictionary containing the orbital elements as keys and the list of min and max bounds as a value
             :param limit: optional, retrieves the first N = limit objects
@@ -163,7 +209,10 @@ class SpaceTrackQuery:
             """
             base_url = "basicspacedata/query/class/gp/OBJECT_TYPE/PAYLOAD/"
             session = requests.Session()
-            session.post(self.spacetrack_url + "/ajaxauth/login", json={'identity': self.username, 'password': self.password})
+            session.post(
+                self.spacetrack_url + "/ajaxauth/login",
+                json={"identity": self.username, "password": self.password},
+            )
 
             all_results = None
 
@@ -186,10 +235,12 @@ class SpaceTrackQuery:
                         results_max = resp_max.json()
 
                 if min_val is not None and max_val is not None:
-                    ids_min = set(obj['NORAD_CAT_ID'] for obj in results_min)
-                    ids_max = set(obj['NORAD_CAT_ID'] for obj in results_max)
+                    ids_min = set(obj["NORAD_CAT_ID"] for obj in results_min)
+                    ids_max = set(obj["NORAD_CAT_ID"] for obj in results_max)
                     common_ids = ids_min.intersection(ids_max)
-                    filtered = [obj for obj in results_min if obj['NORAD_CAT_ID'] in common_ids]
+                    filtered = [
+                        obj for obj in results_min if obj["NORAD_CAT_ID"] in common_ids
+                    ]
                 elif min_val is not None:
                     filtered = results_min
                 else:
@@ -198,19 +249,21 @@ class SpaceTrackQuery:
                 if all_results is None:
                     all_results = filtered
                 else:
-                    current_ids = set(obj['NORAD_CAT_ID'] for obj in filtered)
-                    all_results = [obj for obj in all_results if obj['NORAD_CAT_ID'] in current_ids]
+                    current_ids = set(obj["NORAD_CAT_ID"] for obj in filtered)
+                    all_results = [
+                        obj for obj in all_results if obj["NORAD_CAT_ID"] in current_ids
+                    ]
 
             if not all_results:
-                print('No object found satisfying all user-defined filters. Exiting...\n')
+                print(
+                    "No object found satisfying all user-defined filters. Exiting...\n"
+                )
                 exit()
 
-            with open(output_file, 'w') as f_out:
+            with open(output_file, "w") as f_out:
                 json.dump([all_results], f_out, indent=4)
 
             return all_results
-
-
 
     class OMMUtils:
         def __init__(self, parent):
@@ -218,9 +271,9 @@ class SpaceTrackQuery:
 
             # Optionally prompt again if parent credentials aren't available
             if not self.parent.username:
-                self.parent.username = input('space-track username: ')
+                self.parent.username = input("space-track username: ")
             if not self.parent.password:
-                self.parent.password = getpass.getpass('space-track password: ')
+                self.parent.password = getpass.getpass("space-track password: ")
 
             self.username = self.parent.username
             self.password = self.parent.password
@@ -235,7 +288,10 @@ class SpaceTrackQuery:
             :return: Returns norad_id to name mapping.
             """
             with requests.Session() as s:
-                s.post(self.spacetrack_url+"/ajaxauth/login", json={'identity':self.username, 'password':self.password})
+                s.post(
+                    self.spacetrack_url + "/ajaxauth/login",
+                    json={"identity": self.username, "password": self.password},
+                )
                 # Download satcat data
                 query = f"{self.spacetrack_url}/basicspacedata/query/class/satcat/orderby/NORAD_CAT_ID/format/json"
                 if limit:
@@ -246,9 +302,13 @@ class SpaceTrackQuery:
                     raise RuntimeError(f"Failed to fetch data: {response.status_code}")
 
                 data = response.json()
-                map = {int(obj['NORAD_CAT_ID']): obj['OBJECT_NAME'] for obj in data if obj['OBJECT_NAME']}
+                map = {
+                    int(obj["NORAD_CAT_ID"]): obj["OBJECT_NAME"]
+                    for obj in data
+                    if obj["OBJECT_NAME"]
+                }
                 # Create the dictionary mapping
-                json_name = 'norad_id_to_name.json'
+                json_name = "norad_id_to_name.json"
                 with open(json_name, "w") as f:
                     json.dump(map, f, indent=4)
                     print(f"Saved {len(map)} entries to {json_name}.")
@@ -271,24 +331,32 @@ class SpaceTrackQuery:
 
             filtered = {}
             for i, object_ in enumerate(objects_list):
-                epoch = object_['EPOCH']
+                epoch = object_["EPOCH"]
 
-                creation_date = datetime.fromisoformat(object_['CREATION_DATE'])
+                creation_date = datetime.fromisoformat(object_["CREATION_DATE"])
 
                 if epoch not in filtered:
                     filtered[epoch] = object_
                 else:
-                    print(f'Number of TLEs in the JSON file for OBJECT {object_["NORAD_CAT_ID"]}: {len(objects_list[0])}')
-                    print(f'Warning: Found Duplicate TLE for EPOCH {epoch} for OBJECT {object_["NORAD_CAT_ID"]}. Keeping only the latest one...')
-                    print(f'Updating JSON file accordingly...')
-                    existing_creation_date = datetime.fromisoformat(filtered[epoch]['CREATION_DATE'])
+                    print(
+                        f'Number of TLEs in the JSON file for OBJECT {object_["NORAD_CAT_ID"]}: {len(objects_list[0])}'
+                    )
+                    print(
+                        f'Warning: Found Duplicate TLE for EPOCH {epoch} for OBJECT {object_["NORAD_CAT_ID"]}. Keeping only the latest one...'
+                    )
+                    print(f"Updating JSON file accordingly...")
+                    existing_creation_date = datetime.fromisoformat(
+                        filtered[epoch]["CREATION_DATE"]
+                    )
                     if creation_date > existing_creation_date:
                         filtered[epoch] = object_
 
             with open("temp_filtered_tles.json", "w") as f_out:
                 json.dump([list(filtered.values())], f_out, indent=4)
 
-            print(f'Number of Filtered TLEs in the JSON file for OBJECT {object_["NORAD_CAT_ID"]}: {len(filtered.values())}')
+            print(
+                f'Number of Filtered TLEs in the JSON file for OBJECT {object_["NORAD_CAT_ID"]}: {len(filtered.values())}'
+            )
 
             return filtered.values()
 
@@ -297,9 +365,9 @@ class SpaceTrackQuery:
 
             if type(json_dict) is list:
                 for json in json_dict:
-                    norad_cat_id = json['NORAD_CAT_ID']
-                    tle_line_1 = json['TLE_LINE1']
-                    tle_line_2 = json['TLE_LINE2']
+                    norad_cat_id = json["NORAD_CAT_ID"]
+                    tle_line_1 = json["TLE_LINE1"]
+                    tle_line_2 = json["TLE_LINE2"]
                     tle_dict[norad_cat_id] = (tle_line_1, tle_line_2)
 
             return tle_dict
@@ -307,34 +375,46 @@ class SpaceTrackQuery:
         def get_tudat_keplerian_element_set(self, json_dict):
 
             # retrieve orbital elements from json_dict
-            a = float(json_dict[0]['SEMIMAJOR_AXIS'])*1e3 # [meters]
-            e =float(json_dict[0]['ECCENTRICITY'])
-            i = float(json_dict[0]['INCLINATION']) * math.pi/180 # [rad]
-            omega = float(json_dict[0]['ARG_OF_PERICENTER']) * math.pi/180 # [rad]
-            raan = float(json_dict[0]['RA_OF_ASC_NODE']) * math.pi/180 # [rad]
-            mo = float(json_dict[0]['MEAN_ANOMALY']) * math.pi/180 # [rad]
+            a = float(json_dict[0]["SEMIMAJOR_AXIS"]) * 1e3  # [meters]
+            e = float(json_dict[0]["ECCENTRICITY"])
+            i = float(json_dict[0]["INCLINATION"]) * math.pi / 180  # [rad]
+            omega = float(json_dict[0]["ARG_OF_PERICENTER"]) * math.pi / 180  # [rad]
+            raan = float(json_dict[0]["RA_OF_ASC_NODE"]) * math.pi / 180  # [rad]
+            mo = float(json_dict[0]["MEAN_ANOMALY"]) * math.pi / 180  # [rad]
 
             # Compute true anomaly from mean anomaly via Kepler's equation
-            true_anomaly = self.mean_to_true_anomaly(self,mo,e)
-            
-            return a,e,i,omega,raan,true_anomaly
+            true_anomaly = self.mean_to_true_anomaly(self, mo, e)
+
+            return a, e, i, omega, raan, true_anomaly
 
         def tle_to_TleEphemeris_object(self, tle_line_1, tle_line_2):
             object_tle = environment.Tle(tle_line_1, tle_line_2)
-            ephemeris_object = environment.TleEphemeris("Earth", "J2000", object_tle, False)
+            ephemeris_object = environment.TleEphemeris(
+                "Earth", "J2000", object_tle, False
+            )
             return ephemeris_object
 
-        def plot_earth(self, ax, radius=6378, color='lightblue', alpha=0.5, resolution=50):
+        def plot_earth(
+            self, ax, radius=6378, color="lightblue", alpha=0.5, resolution=50
+        ):
             """Plot Earth as a sphere in the 3D axes."""
             u = np.linspace(0, 2 * np.pi, resolution)
             v = np.linspace(0, np.pi, resolution)
             x = radius * np.outer(np.cos(u), np.sin(v))
             y = radius * np.outer(np.sin(u), np.sin(v))
             z = radius * np.outer(np.ones(np.size(u)), np.cos(v))
-            ax.plot_surface(x, y, z, rstride=1, cstride=1, color=color, alpha=alpha, edgecolor='none')
+            ax.plot_surface(
+                x,
+                y,
+                z,
+                rstride=1,
+                cstride=1,
+                color=color,
+                alpha=alpha,
+                edgecolor="none",
+            )
 
         def get_tle_reference_epoch(self, tle_line_1):
-
             """
             Extracts and converts the epoch from TLE line 1 to a UTC datetime object.
 
@@ -392,7 +472,6 @@ class SpaceTrackQuery:
 
             # Convert eccentric anomaly to true anomaly
             ν = 2 * np.arctan2(
-                np.sqrt(1 + e) * np.sin(E / 2),
-                np.sqrt(1 - e) * np.cos(E / 2)
+                np.sqrt(1 + e) * np.sin(E / 2), np.sqrt(1 - e) * np.cos(E / 2)
             )
             return ν

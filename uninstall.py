@@ -32,16 +32,12 @@ class Remover:
         # Resolve build directory
         self.build_dir = Path(self.args.build_dir).resolve()
         if not self.build_dir.exists():
-            raise FileNotFoundError(
-                f"Build directory {self.build_dir} does not exist."
-            )
+            raise FileNotFoundError(f"Build directory {self.build_dir} does not exist.")
 
         # Resolve conda prefix
         self.conda_prefix = Path(os.environ["CONDA_PREFIX"])
         if not self.conda_prefix.exists():
-            raise FileNotFoundError(
-                f"Conda prefix {self.conda_prefix} does not exist."
-            )
+            raise FileNotFoundError(f"Conda prefix {self.conda_prefix} does not exist.")
 
         # Resolve installation manifest
         self.manifest_dir = self.build_dir / "manifests"
@@ -124,8 +120,7 @@ class Remover:
                     directories.append(element)
                 case _:
                     raise ValueError(
-                        "Aborting uninstall: "
-                        f"Unknown code {code} for {element}"
+                        "Aborting uninstall: " f"Unknown code {code} for {element}"
                     )
 
         # Remove links

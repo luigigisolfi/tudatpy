@@ -68,7 +68,7 @@ extensions = [
     "sphinx_copybutton",
     # 'breathe',
     # 'exhale'
-    "sphinxcontrib.bibtex"
+    "sphinxcontrib.bibtex",
 ]
 autosummary_generate = True  # Turn on sphinx.ext.autosummary
 
@@ -76,9 +76,7 @@ add_module_names = False
 autodoc_member_order = "groupwise"
 
 
-autodoc_default_options = {
-    "show-inheritance": True
-}
+autodoc_default_options = {"show-inheritance": True}
 
 bibtex_bibfiles = ["refs.bib"]
 bibtex_default_style = "plain"
@@ -90,7 +88,7 @@ bibtex_default_style = "plain"
 # }
 
 # custom section to define the size of dependent variables
-napoleon_custom_sections = [('Variable Size', 'params_style')]
+napoleon_custom_sections = [("Variable Size", "params_style")]
 # to not skip __init__
 # def skip(app, what, name, obj, would_skip, options):
 #     if name == "__init__":
@@ -121,8 +119,10 @@ def process_constants_docstring(app, what, name, obj, options, lines):
         lines.clear()
         # retrieve variable type directly from the object
         lines.append(f":type: {type(obj).__name__}")
-        
+
+
 import re
+
 
 def replace_annotated_nparrays(text: str) -> str:
     """
@@ -166,8 +166,10 @@ def replace_annotated_nparrays(text: str) -> str:
 
     return text
 
-def simplify_signature_types(app, what, name, obj, options, signature, return_annotation):
 
+def simplify_signature_types(
+    app, what, name, obj, options, signature, return_annotation
+):
 
     # map complex type hints to simpler representations
     type_replacements = {
@@ -196,11 +198,13 @@ def simplify_signature_types(app, what, name, obj, options, signature, return_an
         return_annotation = replace_annotated_nparrays(return_annotation)
 
     return signature, return_annotation
-    
+
+
 def setup(app):
-    app.connect('autodoc-process-docstring', process_constants_docstring)
+    app.connect("autodoc-process-docstring", process_constants_docstring)
     app.connect("autodoc-process-signature", simplify_signature_types)
-    
+
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
