@@ -10,7 +10,6 @@ import numpy as np
 import pytest
 import datetime
 
-
 spice.load_standard_kernels()
 
 # 87% test coverage for tudatpy/data/horizons.py. Remaineder is rare user input validation

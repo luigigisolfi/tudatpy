@@ -8,7 +8,7 @@ from tudatpy.dynamics.environment_setup.ground_station import (
 )
 from tudatpy.estimation.observations_setup.ancillary_settings import (
     FrequencyBands,
-)  # type:ignore
+)  # type: ignore
 from tudatpy.estimation.observable_models_setup import links
 from tudatpy.astro import time_representation
 from . import Converter
