@@ -2,7 +2,8 @@
 
 Parses and writes CCSDS Navigation Data Messages (Orbit Ephemeris Messages,
 Orbit Mean-Elements Messages, and Tracking Data Messages) in KVN format via
-`NDMParser`/`NDMWriter`.
+`NDMParser`/`NDMWriter`, and converts parsed TDMs into tudat-native
+`TrackingData` objects via `tdm_message_to_tracking_data`.
 """
 
 from .model.parser import NDMParser
@@ -28,6 +29,7 @@ from .ccsds_utils import (
     reconstruct_covariance,
     make_lower_triangular,
 )
+from .tracking_data_conversion import tdm_message_to_tracking_data
 
 __all__ = [
     "NDMParser",
@@ -49,4 +51,5 @@ __all__ = [
     "covariance_matrix_to_named_keywords",
     "reconstruct_covariance",
     "make_lower_triangular",
+    "tdm_message_to_tracking_data",
 ]
