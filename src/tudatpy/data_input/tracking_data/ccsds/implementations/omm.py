@@ -28,10 +28,10 @@ class OMMMetadata(BaseModel):
 
     OBJECT_NAME: str
     OBJECT_ID: str
-    CENTER_NAME: str = "EARTH"
+    CENTER_NAME: str
     REF_FRAME: str
     REF_FRAME_EPOCH: str | None = None
-    TIME_SYSTEM: str = "UTC"
+    TIME_SYSTEM: str
     MEAN_ELEMENT_THEORY: str
     COMMENT: str | None = None
 
@@ -84,13 +84,67 @@ class OMMData(BaseModel):
         expected, not necessarily SEMI_MAJOR_AXIS specifically. This only
         checks that at least one was supplied; it does not cross-check
         against MEAN_ELEMENT_THEORY (that would require the owning
-        OMMMetadata, which this model does not have a reference to).
+        OMMMetadata, which this model does not have a reference to --
+        see `validate_omm_data_for_theory` for that cross-check).
         """
         if self.SEMI_MAJOR_AXIS is None and self.MEAN_MOTION is None:
             raise ValueError(
                 "OMMData requires SEMI_MAJOR_AXIS or MEAN_MOTION " "(Table 4-3, CCSDS 502.0-B-3)."
             )
         return self
+
+
+# CCSDS 502.0-B-3 Table 4-3: which TLE-related OMMData fields become
+# mandatory for a given MEAN_ELEMENT_THEORY value. Unlike TDM's
+# data-keyword -> metadata-field registry, this is keyed the other way
+# (metadata value -> data field), since it's the OMM's TLE-related data
+# block whose requiredness depends on the propagator theory declared in
+# metadata:
+#   - "SGP"/"PPT3": MEAN_MOTION_DOT and MEAN_MOTION_DDOT (drag terms).
+#   - "SGP4": BSTAR (drag parameter for SGP4).
+#   - "SGP4-XP": BTERM (ballistic coefficient) and AGOM (solar radiation
+#     pressure coefficient).
+# NORAD_CAT_ID is deliberately excluded even though its own description
+# says it's "only required if MEAN_ELEMENT_THEORY=SGP/SGP4" -- Table 4-3
+# itself marks it 'O' (optional), contradicting that description, so it's
+# left unenforced rather than guessing which statement to trust.
+_REQUIRED_DATA_FIELDS_FOR_MEAN_ELEMENT_THEORY: dict[str, tuple[str, ...]] = {
+    "SGP": ("MEAN_MOTION_DOT", "MEAN_MOTION_DDOT"),
+    "SGP4": ("BSTAR",),
+    "SGP4-XP": ("BTERM", "AGOM"),
+    "PPT3": ("MEAN_MOTION_DOT", "MEAN_MOTION_DDOT"),
+}
+
+
+def validate_omm_data_for_theory(metadata: OMMMetadata, data: OMMData) -> None:
+    """
+    Cross-checks an OMM segment's data against its metadata's
+    MEAN_ELEMENT_THEORY, raising if a TLE-related field required (per
+    `_REQUIRED_DATA_FIELDS_FOR_MEAN_ELEMENT_THEORY`) for that theory is
+    missing from `data`.
+
+    Parameters
+    ----------
+    metadata : OMMMetadata
+        The segment's metadata.
+    data : OMMData
+        The segment's mean-elements/spacecraft/TLE data.
+
+    Raises
+    ------
+    ValueError
+        If a data field required by the metadata's MEAN_ELEMENT_THEORY is
+        missing.
+    """
+    required_fields = _REQUIRED_DATA_FIELDS_FOR_MEAN_ELEMENT_THEORY.get(
+        metadata.MEAN_ELEMENT_THEORY, ()
+    )
+    missing = [field for field in required_fields if getattr(data, field, None) is None]
+    if missing:
+        raise ValueError(
+            f"OMM data is missing field(s) required by "
+            f"MEAN_ELEMENT_THEORY={metadata.MEAN_ELEMENT_THEORY!r}: {', '.join(missing)}"
+        )
 
 
 OMM_HEADER_KEYWORDS = (frozenset(CCSDSHeader.model_fields.keys()) - {"CCSDS_VERS", "COMMENT"}) | {

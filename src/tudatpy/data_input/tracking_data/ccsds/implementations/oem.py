@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, model_validator
 
 
 class OEMStateVector(BaseModel):
@@ -44,13 +44,24 @@ class OEMMetadata(BaseModel):
         COMMENT: Optional comments.
     """
 
+    COMMENT: str | None = None
     OBJECT_NAME: str
     OBJECT_ID: str
-    CENTER_NAME: str = "EARTH"
+    CENTER_NAME: str
     REF_FRAME: str
-    TIME_SYSTEM: str = "UTC"
+    REF_FRAME_EPOCH: str | None = None
+    TIME_SYSTEM: str
     START_TIME: str
     STOP_TIME: str
-    INTERPOLATION: str | None = "LAGRANGE"
-    INTERPOLATION_DEGREE: int | None = 1
-    COMMENT: str | None = None
+    USABLE_START_TIME: str | None = None
+    USABLE_STOP_TIME: str | None = None
+    INTERPOLATION: str | None = None
+    INTERPOLATION_DEGREE: int | None = None
+
+    @model_validator(mode="after")
+    def validate_interpolation(self):
+        if self.INTERPOLATION is not None and self.INTERPOLATION_DEGREE is None:
+            raise ValueError(
+                "INTERPOLATION_DEGREE must be provided when INTERPOLATION is specified"
+            )
+        return self

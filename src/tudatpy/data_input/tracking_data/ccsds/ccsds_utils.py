@@ -51,18 +51,29 @@ def covariance_matrix_from_named_keywords(data: dict) -> np.ndarray | None:
     np.ndarray | None
         A 6x6 symmetric matrix, or None if NONE of the 21 covariance
         keywords are present in `data` (covariance is entirely optional).
-        Per CCSDS 502.0-B-3 4.2.4.5, covariance is conditional: if ANY
-        of the 21 are present, all must be; this function does not itself
-        enforce that (callers doing strict CCSDS validation should check
-        completeness before calling).
+
+    Raises
+    ------
+    ValueError
+        Per CCSDS 502.0-B-3 4.2.4.5, covariance is all-or-nothing: if ANY
+        of the 21 named keywords are present, all 21 must be. Raised if
+        only some are present.
     """
-    if not any(key in data for key, _, _ in _NAMED_COVARIANCE_KEYWORD_CELLS):
+    present_keys = [key for key, _, _ in _NAMED_COVARIANCE_KEYWORD_CELLS if key in data]
+    if not present_keys:
         return None
+    if len(present_keys) != len(_NAMED_COVARIANCE_KEYWORD_CELLS):
+        missing_keys = [
+            key for key, _, _ in _NAMED_COVARIANCE_KEYWORD_CELLS if key not in present_keys
+        ]
+        raise ValueError(
+            "OMM/OPM covariance is all-or-nothing (CCSDS 502.0-B-3 4.2.4.5): "
+            f"{len(present_keys)}/{len(_NAMED_COVARIANCE_KEYWORD_CELLS)} named "
+            f"covariance keywords are present; missing: {', '.join(missing_keys)}."
+        )
 
     matrix = np.zeros((6, 6))
     for key, row, col in _NAMED_COVARIANCE_KEYWORD_CELLS:
-        if key not in data:
-            continue
         val = float(data[key])
         matrix[row, col] = val
         matrix[col, row] = val

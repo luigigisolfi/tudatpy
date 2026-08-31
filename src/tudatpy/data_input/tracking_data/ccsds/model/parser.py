@@ -260,6 +260,9 @@ class NDMParser:
         elif line == "COVARIANCE_START":
             self._state = "COVARIANCE"
             self._current_cov_raw = {}
+            # Reset rather than let a previous covariance block's epoch leak
+            # into this one -- see the EPOCH-missing check below.
+            self._current_cov_epoch = None
             return
 
         elif line == "COVARIANCE_STOP":
@@ -300,7 +303,17 @@ class NDMParser:
                 **{l: float(val) for l, val in zip(["x", "y", "z", "vx", "vy", "vz"], v)}
             )
 
-        elif self._state == "COVARIANCE" and self._current_cov_epoch:
+        elif self._state == "COVARIANCE":
+            if not self._current_cov_epoch:
+                # Per CCSDS 502.0-B-3 5.2.5.3, a covariance matrix's EPOCH
+                # must be provided; without it these rows can't be attached
+                # to any epoch, so raise here instead of silently dropping
+                # them (the previous behavior).
+                raise ValueError(
+                    "COVARIANCE block has matrix data before an 'EPOCH' "
+                    "keyword -- OEM covariance data lines must be preceded "
+                    "by 'EPOCH = <value>' (CCSDS 502.0-B-3 5.2.5.3)."
+                )
             # Accumulate raw matrix lines for later reconstruction
             self._current_cov_raw[self._current_cov_epoch].append(line)
 

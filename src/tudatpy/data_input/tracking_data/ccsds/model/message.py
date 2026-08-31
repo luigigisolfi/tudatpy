@@ -1,6 +1,6 @@
 from ..implementations.oem import OEMMetadata
-from ..implementations.tdm import TDMMetadata
-from ..implementations.omm import OMMMetadata, OMMData
+from ..implementations.tdm import TDMMetadata, validate_tdm_metadata_for_data
+from ..implementations.omm import OMMMetadata, OMMData, validate_omm_data_for_theory
 from typing import Any
 from ..implementations.common import CCSDSHeader
 from collections import defaultdict
@@ -17,6 +17,15 @@ class Segment:
     """A single block consisting of one Metadata section and one Data section."""
 
     def __init__(self, metadata: OEMMetadata | TDMMetadata | OMMMetadata, data: Any):
+        if isinstance(metadata, TDMMetadata):
+            # TDM has per-observable metadata requirements (Table 3-5) --
+            # OEM's data section has a single fixed schema, so there's
+            # nothing to cross-check for it.
+            validate_tdm_metadata_for_data(metadata, data)
+        elif isinstance(metadata, OMMMetadata) and isinstance(data, OMMData):
+            # OMM's TLE-related data fields are conditionally required
+            # based on the metadata's MEAN_ELEMENT_THEORY (Table 4-3).
+            validate_omm_data_for_theory(metadata, data)
         self.metadata = metadata
         self.data = data
         self.covariance = None
