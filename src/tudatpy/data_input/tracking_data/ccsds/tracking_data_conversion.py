@@ -20,18 +20,19 @@ _SPEED_OF_LIGHT = constants.SPEED_OF_LIGHT
 # CCSDS TDM ANGLE_TYPE -> tudat's canonical ObservableType name
 # (observation_models::getObservableName/getObservableType,
 # createObservationCollection.cpp::getObservableTypeFromTrackingDataString).
-# "X_Y" has no equivalent tudat observable and is not supported.
+
+# "XSYE (X: South, Y: East) and XEYN (X:East, Y:North)" have no equivalent tudat observable and are not supported yet.
 _ANGLE_TYPE_TO_OBSERVABLE_NAME = {
     "RADEC": "AngularPosition",
     "AZEL": "AzimuthElevation",
 }
 
-# TDM scalar data keyword -> tudat's canonical ObservableType name. Doppler
-# is handled separately (_convert_doppler_group below), since -- unlike
-# RANGE -- it needs a reference frequency before it means anything.
-_SCALAR_KEYWORD_TO_OBSERVABLE_NAME = {
-    "RANGE": "OneWayRange",
-}
+## TDM scalar data keyword (RANGE, DOPPLER_INSTANTANEOUS, ETC...) -> tudat's canonical ObservableType name. Doppler
+## is handled separately (_convert_doppler_group below), since (unlike
+## RANGE) it needs a reference frequency before it means anything.
+# _SCALAR_KEYWORD_TO_OBSERVABLE_NAME = {
+#    "RANGE": "OneWayRange",
+# }
 
 
 def _tdm_epoch_to_utc_seconds(time_tag: str) -> float:
@@ -80,64 +81,66 @@ def _build_link_ends_list(rso_id: str, station_name: str) -> list:
     ]
 
 
-def _build_transmit_frequency_ramp(
-    segment, sorted_time_tags: list[str]
-) -> list[tuple[float, float, float]] | None:
-    """
-    Parses TRANSMIT_FREQ_1/TRANSMIT_FREQ_RATE_1 into a piecewise-linear
-    frequency ramp: a list of (start_time, start_frequency, rate) tuples,
-    sorted by start_time. Only band 1 is read -- TRANSMIT_FREQ_2..5 support
-    multi-band tracking setups this function doesn't handle yet.
-
-    Each entry's rate defaults to 0.0 (constant) if TRANSMIT_FREQ_RATE_1
-    isn't given at that same epoch.
-
-    Returns
-    -------
-    list[tuple[float, float, float]] | None
-        None if the segment has no TRANSMIT_FREQ_1 entries at all.
-    """
-    ramp_points = []
-    for time_tag in sorted_time_tags:
-        obs = segment.data[time_tag]
-        if "TRANSMIT_FREQ_1" not in obs:
-            continue
-        ramp_points.append(
-            (
-                _tdm_epoch_to_utc_seconds(time_tag),
-                float(obs["TRANSMIT_FREQ_1"]),
-                float(obs.get("TRANSMIT_FREQ_RATE_1", 0.0)),
-            )
-        )
-
-    if not ramp_points:
-        return None
-
-    ramp_points.sort(key=lambda entry: entry[0])
-    return ramp_points
-
-
-def _evaluate_frequency_ramp(ramp_points: list[tuple[float, float, float]], epoch: float) -> float:
-    """
-    Evaluates a piecewise-linear frequency ramp (as built by
-    `_build_transmit_frequency_ramp`) at `epoch`.
-
-    `epoch` before the first ramp point extrapolates backward using the
-    first point's rate; `epoch` after the last point extrapolates forward
-    using the last point's rate -- in both cases assuming that point's
-    ramp remained in effect, since there's nothing later/earlier to bound
-    it with.
-    """
-    applicable = ramp_points[0]
-    for point in ramp_points:
-        if point[0] > epoch:
-            break
-        applicable = point
-
-    start_time, start_frequency, rate = applicable
-    return start_frequency + rate * (epoch - start_time)
+############################################ FREQUENCY RAMPS ####################################
+# def _build_transmit_frequency_ramp(
+#    segment, sorted_time_tags: list[str]
+# ) -> list[tuple[float, float, float]] | None:
+#    """
+#    Parses TRANSMIT_FREQ_1/TRANSMIT_FREQ_RATE_1 into a piecewise-linear
+#    frequency ramp: a list of (start_time, start_frequency, rate) tuples,
+#    sorted by start_time. Only band 1 is read -- TRANSMIT_FREQ_2..5 support
+#    multi-band tracking setups this function doesn't handle yet.
+#
+#    Each entry's rate defaults to 0.0 (constant) if TRANSMIT_FREQ_RATE_1
+#    isn't given at that same epoch.
+#
+#    Returns
+#    -------
+#    list[tuple[float, float, float]] | None
+#        None if the segment has no TRANSMIT_FREQ_1 entries at all.
+#    """
+#    ramp_points = []
+#    for time_tag in sorted_time_tags:
+#        obs = segment.data[time_tag]
+#        if "TRANSMIT_FREQ_1" not in obs:
+#            continue
+#        ramp_points.append(
+#            (
+#                _tdm_epoch_to_utc_seconds(time_tag),
+#                float(obs["TRANSMIT_FREQ_1"]),
+#                float(obs.get("TRANSMIT_FREQ_RATE_1", 0.0)),
+#            )
+#        )
+#
+#    if not ramp_points:
+#        return None
+#
+#    ramp_points.sort(key=lambda entry: entry[0])
+#    return ramp_points
 
 
+# def _evaluate_frequency_ramp(ramp_points: list[tuple[float, float, float]], epoch: float) -> float:
+#    """
+#    Evaluates a piecewise-linear frequency ramp (as built by
+#    `_build_transmit_frequency_ramp`) at `epoch`.
+#
+#    `epoch` before the first ramp point extrapolates backward using the
+#    first point's rate; `epoch` after the last point extrapolates forward
+#    using the last point's rate -- in both cases assuming that point's
+#    ramp remained in effect, since there's nothing later/earlier to bound
+#    it with.
+#    """
+#    applicable = ramp_points[0]
+#    for point in ramp_points:
+#        if point[0] > epoch:
+#            break
+#        applicable = point
+#
+#    start_time, start_frequency, rate = applicable
+#    return start_frequency + rate * (epoch - start_time)
+
+
+############################################ UNIT CONVERSIONS ####################################
 def _convert_angle_group(
     segment, sorted_time_tags: list[str], link_ends: list
 ) -> "TrackingData | None":
@@ -173,103 +176,104 @@ def _convert_angle_group(
     return tracking_data
 
 
-def _convert_scalar_groups(segment, sorted_time_tags: list[str], link_ends: list) -> list:
-    tracking_data_objects = []
-    for keyword, observable_name in _SCALAR_KEYWORD_TO_OBSERVABLE_NAME.items():
-        if not any(keyword in obs for obs in segment.data.values()):
-            continue
-
-        epochs, observations = [], []
-        for time_tag in sorted_time_tags:
-            obs = segment.data[time_tag]
-            if keyword not in obs:
-                continue
-            epochs.append(_tdm_epoch_to_utc_seconds(time_tag))
-            # CCSDS TDM RANGE is conventionally given in km; tudat is SI (m).
-            observations.append(np.array([obs[keyword] * 1000.0]))
-
-        tracking_data_objects.append(
-            TrackingData(observable_name, link_ends, observations, epochs, "receiver", "UTC")
-        )
-    return tracking_data_objects
-
-
-def _convert_doppler_group(
-    segment, sorted_time_tags: list[str], link_ends: list, rso_id: str, station_name: str
-):
-    """
-    Converts DOPPLER_INSTANTANEOUS into a "OneWayDoppler" `TrackingData`, in
-    velocity units (m/s) -- i.e. matching an observation-model configured
-    with `normalizeWithSpeedOfLight=False`, NOT tudat's dimensionless
-    default. This is the same physical quantity as a range-rate.
-
-    Requires TRANSMIT_FREQ_1 (optionally TRANSMIT_FREQ_RATE_1) to be
-    present in this segment -- CCSDS's raw Hz shift is meaningless without
-    knowing what frequency it's a shift from, and this function does not
-    accept an externally-supplied fallback. Raises if DOPPLER_INSTANTANEOUS
-    is present but TRANSMIT_FREQ_1 is not, rather than silently skipping,
-    since that's very likely lost data the caller would want to know about.
-
-    Caveats
-    -------
-    - Only DOPPLER_INSTANTANEOUS is handled; DOPPLER_INTEGRATED needs a
-      count-interval interpretation this function doesn't have and is not
-      converted.
-    - Only band 1 (TRANSMIT_FREQ_1/_RATE_1) is read; multi-band TDMs
-      (TRANSMIT_FREQ_2..5) are not supported.
-    - Assumes the standard convention DOPPLER_INSTANTANEOUS = f_received -
-      f_transmitted (unverified against a real reference TDM with known
-      truth Doppler -- worth checking before trusting this numerically).
-    - Uses the classical (non-relativistic) Doppler relation; tudat's own
-      OneWayDoppler model includes proper-time-rate correction terms this
-      conversion does not reproduce, so treat this as a first-order
-      approximation of what that model would predict.
-
-    Returns
-    -------
-    tuple[TrackingData, TrackingSupplementaryData] | tuple[None, None]
-        `(None, None)` if this segment has no DOPPLER_INSTANTANEOUS data.
-    """
-    if not any("DOPPLER_INSTANTANEOUS" in obs for obs in segment.data.values()):
-        return None, None
-
-    ramp_points = _build_transmit_frequency_ramp(segment, sorted_time_tags)
-    if ramp_points is None:
-        raise ValueError(
-            "Segment has DOPPLER_INSTANTANEOUS data but no TRANSMIT_FREQ_1 "
-            "entries to interpret it against -- cannot convert a raw Hz "
-            "Doppler shift without knowing the reference transmit "
-            "frequency. Supply a TDM with TRANSMIT_FREQ_1 (and, if the "
-            "uplink is ramped, TRANSMIT_FREQ_RATE_1)."
-        )
-
-    epochs, observations = [], []
-    for time_tag in sorted_time_tags:
-        obs = segment.data[time_tag]
-        if "DOPPLER_INSTANTANEOUS" not in obs:
-            continue
-        epoch = _tdm_epoch_to_utc_seconds(time_tag)
-        transmit_frequency_hz = _evaluate_frequency_ramp(ramp_points, epoch)
-        range_rate = -_SPEED_OF_LIGHT * obs["DOPPLER_INSTANTANEOUS"] / transmit_frequency_hz
-        epochs.append(epoch)
-        observations.append(np.array([range_rate]))
-
-    tracking_data = TrackingData(
-        "OneWayDoppler", link_ends, observations, epochs, "receiver", "UTC"
-    )
-
-    frequency_ramp_data = RampedFrequencySupplementaryData()
-    ramp_end_time = epochs[-1] if epochs else ramp_points[-1][0]
-    for i, (start_time, start_frequency, rate) in enumerate(ramp_points):
-        end_time = ramp_points[i + 1][0] if i + 1 < len(ramp_points) else ramp_end_time
-        frequency_ramp_data.add_frequency_ramp(start_time, end_time, start_frequency, rate)
-
-    supplementary_data = TrackingSupplementaryData("Earth", str(station_name))
-    supplementary_data.set_frequency_supplementary_data([frequency_ramp_data])
-
-    return tracking_data, supplementary_data
+# def _convert_scalar_groups(segment, sorted_time_tags: list[str], link_ends: list) -> list:
+#    tracking_data_objects = []
+#    for keyword, observable_name in _SCALAR_KEYWORD_TO_OBSERVABLE_NAME.items():
+#        if not any(keyword in obs for obs in segment.data.values()):
+#            continue
+#
+#        epochs, observations = [], []
+#        for time_tag in sorted_time_tags:
+#            obs = segment.data[time_tag]
+#            if keyword not in obs:
+#                continue
+#            epochs.append(_tdm_epoch_to_utc_seconds(time_tag))
+#            # CCSDS TDM RANGE is conventionally given in km; tudat is SI (m).
+#            observations.append(np.array([obs[keyword] * 1000.0]))
+#
+#        tracking_data_objects.append(
+#            TrackingData(observable_name, link_ends, observations, epochs, "receiver", "UTC")
+#        )
+#    return tracking_data_objects
 
 
+# def _convert_doppler_group(
+#    segment, sorted_time_tags: list[str], link_ends: list, rso_id: str, station_name: str
+# ):
+#    """
+#    Converts DOPPLER_INSTANTANEOUS into a "OneWayDoppler" `TrackingData`, in
+#    velocity units (m/s) -- i.e. matching an observation-model configured
+#    with `normalizeWithSpeedOfLight=False`, NOT tudat's dimensionless
+#    default. This is the same physical quantity as a range-rate.
+#
+#    Requires TRANSMIT_FREQ_1 (optionally TRANSMIT_FREQ_RATE_1) to be
+#    present in this segment -- CCSDS's raw Hz shift is meaningless without
+#    knowing what frequency it's a shift from, and this function does not
+#    accept an externally-supplied fallback. Raises if DOPPLER_INSTANTANEOUS
+#    is present but TRANSMIT_FREQ_1 is not, rather than silently skipping,
+#    since that's very likely lost data the caller would want to know about.
+#
+#    Caveats
+#    -------
+#    - Only DOPPLER_INSTANTANEOUS is handled; DOPPLER_INTEGRATED needs a
+#      count-interval interpretation this function doesn't have and is not
+#      converted.
+#    - Only band 1 (TRANSMIT_FREQ_1/_RATE_1) is read; multi-band TDMs
+#      (TRANSMIT_FREQ_2..5) are not supported.
+#    - Assumes the standard convention DOPPLER_INSTANTANEOUS = f_received -
+#      f_transmitted (unverified against a real reference TDM with known
+#      truth Doppler -- worth checking before trusting this numerically).
+#    - Uses the classical (non-relativistic) Doppler relation; tudat's own
+#      OneWayDoppler model includes proper-time-rate correction terms this
+#      conversion does not reproduce, so treat this as a first-order
+#      approximation of what that model would predict.
+#
+#    Returns
+#    -------
+#    tuple[TrackingData, TrackingSupplementaryData] | tuple[None, None]
+#        `(None, None)` if this segment has no DOPPLER_INSTANTANEOUS data.
+#    """
+#    if not any("DOPPLER_INSTANTANEOUS" in obs for obs in segment.data.values()):
+#        return None, None
+#
+#    ramp_points = _build_transmit_frequency_ramp(segment, sorted_time_tags)
+#    if ramp_points is None:
+#        raise ValueError(
+#            "Segment has DOPPLER_INSTANTANEOUS data but no TRANSMIT_FREQ_1 "
+#            "entries to interpret it against -- cannot convert a raw Hz "
+#            "Doppler shift without knowing the reference transmit "
+#            "frequency. Supply a TDM with TRANSMIT_FREQ_1 (and, if the "
+#            "uplink is ramped, TRANSMIT_FREQ_RATE_1)."
+#        )
+#
+#    epochs, observations = [], []
+#    for time_tag in sorted_time_tags:
+#        obs = segment.data[time_tag]
+#        if "DOPPLER_INSTANTANEOUS" not in obs:
+#            continue
+#        epoch = _tdm_epoch_to_utc_seconds(time_tag)
+#        transmit_frequency_hz = _evaluate_frequency_ramp(ramp_points, epoch)
+#        range_rate = -_SPEED_OF_LIGHT * obs["DOPPLER_INSTANTANEOUS"] / transmit_frequency_hz
+#        epochs.append(epoch)
+#        observations.append(np.array([range_rate]))
+#
+#    tracking_data = TrackingData(
+#        "OneWayDoppler", link_ends, observations, epochs, "receiver", "UTC"
+#    )
+#
+#    frequency_ramp_data = RampedFrequencySupplementaryData()
+#    ramp_end_time = epochs[-1] if epochs else ramp_points[-1][0]
+#    for i, (start_time, start_frequency, rate) in enumerate(ramp_points):
+#        end_time = ramp_points[i + 1][0] if i + 1 < len(ramp_points) else ramp_end_time
+#        frequency_ramp_data.add_frequency_ramp(start_time, end_time, start_frequency, rate)
+#
+#    supplementary_data = TrackingSupplementaryData("Earth", str(station_name))
+#    supplementary_data.set_frequency_supplementary_data([frequency_ramp_data])
+#
+#    return tracking_data, supplementary_data
+
+
+################################## CONVERSION TO TRACKING DATA ####################################
 def tdm_message_to_tracking_data(tdm_message: TDMMessage) -> tuple[list, list]:
     """
     Converts every segment of a parsed TDM message into one or more
@@ -315,13 +319,15 @@ def tdm_message_to_tracking_data(tdm_message: TDMMessage) -> tuple[list, list]:
         if has_angles:
             tracking_data_objects.append(_convert_angle_group(segment, sorted_time_tags, link_ends))
 
-        tracking_data_objects.extend(_convert_scalar_groups(segment, sorted_time_tags, link_ends))
+        # UNCOMMENT WHENEVER WE WANT TO SUPPORT SCALAR GROUPS.
+        # tracking_data_objects.extend(_convert_scalar_groups(segment, sorted_time_tags, link_ends))
 
-        doppler_tracking_data, doppler_supplementary_data = _convert_doppler_group(
-            segment, sorted_time_tags, link_ends, rso_id, station_name
-        )
-        if doppler_tracking_data is not None:
-            tracking_data_objects.append(doppler_tracking_data)
-            supplementary_data_objects.append(doppler_supplementary_data)
+        # UNCOMMENT WHENEVER WE WANT TO SUPPORT DOPPLER GROUP
+        # doppler_tracking_data, doppler_supplementary_data = _convert_doppler_group(
+        #    segment, sorted_time_tags, link_ends, rso_id, station_name
+        # )
+        # if doppler_tracking_data is not None:
+        #    tracking_data_objects.append(doppler_tracking_data)
+        #    supplementary_data_objects.append(doppler_supplementary_data)
 
     return tracking_data_objects, supplementary_data_objects
