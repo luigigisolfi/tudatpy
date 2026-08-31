@@ -32,11 +32,13 @@ namespace observations_setup
 
 void expose_observations_setup( py::module& m )
 {
-    auto ancillary_settings = m.def_submodule( "ancillary_settings" );
-    ancillary_settings::expose_ancillary_settings( ancillary_settings );
-
-    auto observations_dependent_variables = m.def_submodule( "observations_dependent_variables" );
-    observations_dependent_variables::expose_observations_dependent_variables( observations_dependent_variables );
+    // ancillary_settings and observations_dependent_variables are exposed by
+    // the caller (expose_estimation()) before this function runs, since they
+    // need py::module_::import (not def_submodule) to attach to the
+    // already-created submodules from expose_estimation_types(). Redoing
+    // them here via def_submodule would create a second, distinct module
+    // object and re-register their pybind11 types, which pybind11 rejects
+    // ("an object with that name is already defined").
 
     auto observations_simulation_settings = m.def_submodule( "observations_simulation_settings" );
     observations_simulation_settings::expose_observations_simulation_settings( observations_simulation_settings );
